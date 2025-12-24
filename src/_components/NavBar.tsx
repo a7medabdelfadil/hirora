@@ -111,9 +111,9 @@ const buildNavLinks = (role: PortalRole, t: (key: string) => string) => {
   return [
     { href: "/job-seeker", icon: LuLayoutDashboard, label: t("dashboard") },
     {
-      href: "/job-seeker/jobs",
+      href: "/job-seeker/find-jobs",
       icon: HiOutlineBriefcase,
-      label: t("jobs"),
+      label: "Find Jobs",
     },
     {
       href: "/job-seeker/applications",
