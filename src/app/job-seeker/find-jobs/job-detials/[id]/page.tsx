@@ -66,7 +66,7 @@ export default function JobDetails() {
     <Container>
       <BackButton />
       <div className="md:flex gap-4">
-        <section className="w-full md:w-3/5">
+        <section className="w-full md:w-3/5 mb-4">
           <div className="mx-auto space-y-4">
             {/* Header Card */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
