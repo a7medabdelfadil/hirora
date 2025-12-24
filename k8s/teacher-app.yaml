@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teacher-deploy
+  namespace: teacher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teacher
+  template:
+    metadata:
+      labels:
+        app: teacher
+    spec:
+      containers:
+      - name: teacher
+        image: expotechx/teacher:099b4
+        ports:
+        - containerPort: 3000
+        # resources:
+        #   limits:
+        #     memory: "512Mi"
+        #     cpu: "500m"
+        #   requests:
+        #     memory: "256Mi"
+        #     cpu: "250m"
+      imagePullSecrets:
+      - name: regcred
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: teacher-svc
+  namespace: teacher
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: teacher
+--- 
+ 
