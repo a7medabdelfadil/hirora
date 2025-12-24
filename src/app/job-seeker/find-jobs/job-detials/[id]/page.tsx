@@ -1,16 +1,19 @@
 'use client';
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { FiClock, FiDollarSign } from "react-icons/fi";
 import { HiOutlineLocationMarker } from "react-icons/hi";
 import { HiArrowLeft, HiCheckCircle, HiOutlineBriefcase } from "react-icons/hi2";
+import BackButton from "~/_components/global/BackButton";
 import Container from "~/_components/global/Container";
 import ApplyJobModal from "~/_components/job-seeker/ApplyModal";
 
-export default function Page({ params }: { params: { id: string } }) {
-  // const { id } = params;
+export default function JobDetails() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+  console.log(id)
 
   const job = {
     title: "Senior Full Stack Developer",
@@ -61,14 +64,7 @@ export default function Page({ params }: { params: { id: string } }) {
   ];
   return (
     <Container>
-      <button
-        type="button"
-        onClick={() => router.back()}
-        className="inline-flex mt-4 mb-6 items-center gap-2 text-md font-medium text-[#9810FA] transition hover:text-purple-800"
-      >
-        <HiArrowLeft className="h-4 w-4" />
-        Back to search
-      </button>
+      <BackButton />
       <div className="md:flex gap-4">
         <section className="w-full md:w-3/5">
           <div className="mx-auto space-y-4">
