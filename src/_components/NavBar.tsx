@@ -82,7 +82,7 @@ const buildNavLinks = (role: PortalRole, t: (key: string) => string) => {
         icon: HiOutlineBuildingOffice2,
         label: "Companies",
       },
-      { href: "/admin/jobs", icon: HiOutlineBriefcase, label: "Job Posting" },
+      { href: "/admin/jobs", icon: HiOutlineBriefcase, label: "Jobs" },
       {
         href: "/admin/applications",
         icon: HiOutlineUserGroup,

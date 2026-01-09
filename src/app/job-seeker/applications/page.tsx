@@ -72,7 +72,7 @@ export default function Applications() {
                     </div>
                 </div>
             </section>
-            <section className="w-full">
+            <section className="w-full mb-10">
                 <div className="mx-auto px-4 py-6">
                     {/* Top search/filter bar */}
                     <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">

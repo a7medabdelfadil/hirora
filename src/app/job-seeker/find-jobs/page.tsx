@@ -218,7 +218,7 @@ export default function FindJobjs() {
           </div>
         </div>
       </section>
-      <section className="w-full">
+      <section className="w-full mb-10">
         <div className="mx-auto px-4 pb-6">
           <div className="mb-4 flex items-center justify-between gap-4">
             <p className="text-sm text-slate-500">
