@@ -80,13 +80,13 @@ const buildNavLinks = (role: PortalRole, t: (key: string) => string) => {
       {
         href: "/admin/companies",
         icon: HiOutlineBuildingOffice2,
-        label: t("companies"),
+        label: "Companies",
       },
-      { href: "/admin/jobs", icon: HiOutlineBriefcase, label: t("jobs") },
+      { href: "/admin/jobs", icon: HiOutlineBriefcase, label: "Job Posting" },
       {
         href: "/admin/applications",
         icon: HiOutlineUserGroup,
-        label: t("applications"),
+        label: "Applications",
       },
     ];
   }
@@ -97,12 +97,12 @@ const buildNavLinks = (role: PortalRole, t: (key: string) => string) => {
       {
         href: "/employer/jobs",
         icon: HiOutlineBriefcase,
-        label: t("jobs"),
+        label: "Job Posting",
       },
       {
         href: "/employer/applications",
         icon: HiOutlineUserGroup,
-        label: t("applications"),
+        label: "Applications",
       },
     ];
   }
@@ -118,7 +118,7 @@ const buildNavLinks = (role: PortalRole, t: (key: string) => string) => {
     {
       href: "/job-seeker/applications",
       icon: HiOutlineUserGroup,
-      label: t("applications"),
+      label: "Applications",
     },
   ];
 };
@@ -184,7 +184,7 @@ const NavBarLink = ({
 
 const NavBar = () => {
   const router = useRouter();
-  const toggleNav = useBooleanValue((state) => state.toggle);
+  const toggleNav = useBooleanValue((state: any) => state.toggle);
   const [profile, setProfile] = useState(false);
   const toggleProfile = () => setProfile((p) => !p);
 

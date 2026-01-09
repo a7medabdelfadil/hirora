@@ -31,10 +31,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <title>Innovix Platform</title>
+        <title>Hirora</title>
         <meta
           name="description"
-          content="Graduation Project."
+          content="We are innovix team and this is hirora platform."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link
