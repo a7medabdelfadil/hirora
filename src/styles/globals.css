@@ -102,6 +102,13 @@
   }
 }
 
+.recharts-wrapper:focus,
+.recharts-wrapper *:focus,
+svg:focus {
+  outline: none !important;
+}
+
+
 /* .RadioGroupRoot {
 	display: flex;
 	flex-direction: column;
