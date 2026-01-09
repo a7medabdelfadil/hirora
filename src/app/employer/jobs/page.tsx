@@ -32,15 +32,6 @@ function JobPostingPage() {
 
                         {/* Right: Filter + Select + Button */}
                         <div className="flex items-center justify-end gap-3">
-                            {/* small filter icon button */}
-                            <button
-                                type="button"
-                                className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                                aria-label="Filters"
-                                title="Filters"
-                            >
-                                <Filter className="h-5 w-5" />
-                            </button>
 
                             {/* Status dropdown */}
                             <div className="relative">
@@ -77,7 +68,7 @@ function JobPostingPage() {
                     </div>
                 </div>
             </section>
-            <section className="w-full mt-4">
+            <section className="w-full mt-4 mb-10">
                 <JobCardsSection />
             </section>
         </Container>

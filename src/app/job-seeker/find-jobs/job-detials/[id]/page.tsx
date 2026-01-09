@@ -161,7 +161,7 @@ export default function JobDetails() {
             </div>
           </div>
         </section>
-        <section className="w-full md:w-2/5">
+        <section className="w-full md:w-2/5 mb-10">
           <div className="rounded-2xl mb-4 border border-slate-200 bg-white p-5 shadow-sm">
             <h3 className="text-sm font-semibold text-slate-900">About Company</h3>
 
