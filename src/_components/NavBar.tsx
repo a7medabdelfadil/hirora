@@ -20,6 +20,7 @@ import {
   HiOutlineArrowRightOnRectangle,
 } from "react-icons/hi2";
 import { HiOutlineUserGroup } from "react-icons/hi";
+import Cookies from "js-cookie";
 
 // ---------- ROLE HELPERS ----------
 
@@ -47,10 +48,10 @@ const roleUserNameMap: Record<PortalRole, string> = {
 const roleColorClasses: Record<
   PortalRole,
   {
-    accentBg: string; 
-    accentText: string; 
-    activeBg: string; 
-    activeText: string; 
+    accentBg: string;
+    accentText: string;
+    activeBg: string;
+    activeText: string;
   }
 > = {
   admin: {
@@ -168,11 +169,10 @@ const NavBarLink = ({
         className={`${baseLinkClasses} ${sizeClasses} ${stateClasses}`}
       >
         <Icon
-          className={`h-6 w-6 flex-shrink-0 ${
-            isActive
+          className={`h-6 w-6 flex-shrink-0 ${isActive
               ? activeTextClass
               : `text-slate-400 ${currentRole === "admin" ? "group-hover:text-blue-600" : currentRole === "employer" ? "group-hover:text-emerald-600" : "group-hover:text-purple-600"}`
-          }`}
+            }`}
         />
         {!small && <span className="truncate">{label}</span>}
       </Link>
@@ -433,7 +433,11 @@ const NavBar = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    router.push("/role-selection");
+                    Cookies.remove("token", { path: "/" });
+                    useUserDataStore.getState().clearUserData();
+
+                    router.replace("/signin");
+                    router.refresh();
                   }}
                   className="mt-4 inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-base text-slate-600 transition-colors hover:bg-slate-100 hover:text-red-500"
                 >

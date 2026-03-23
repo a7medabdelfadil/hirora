@@ -1,5 +1,7 @@
 "use client";
 import "~/styles/globals.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GeistSans } from "geist/font/sans";
 import "react-toastify/dist/ReactToastify.css";
@@ -15,26 +17,22 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const [queryClient] = useState(() => new QueryClient());
-  const isLoginPage = pathname === "/login" || pathname === "/signup" || pathname === "/role-selection";
+  const isLoginPage = pathname === "/signin" || pathname === "/signup";
   const { language } = useLanguageStore() as {
     language: string;
   };
 
-  const lang = language === "ar" ? "ar" : "en";
-  const dir = language === "ar" ? "rtl" : "ltr";
-
   return (
     <html
-      lang={lang}
-      dir={dir}
+      lang="en"
       className={GeistSans.variable}
       suppressHydrationWarning
     >
       <head>
-        <title>Hirora</title>
+        <title>Hire Hub</title>
         <meta
           name="description"
-          content="We are innovix team and this is hirora platform."
+          content="We are innovix team and this is Hire Hub platform."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link
@@ -48,6 +46,7 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             {!isLoginPage && <NavBar />}
             <TRPCReactProvider>{children}</TRPCReactProvider>
+            <ToastContainer />
           </ThemeProvider>
         </QueryClientProvider>
       </body>
