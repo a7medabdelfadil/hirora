@@ -9,6 +9,8 @@ import {
 } from "react-icons/hi2";
 import Button from "~/_components/global/Button";
 import Input from "~/_components/global/Input";
+import Link from "next/link";
+import { useLogin } from "~/APIs/hooks/useAuth";
 
 type Role = "admin" | "employer" | "candidate";
 
@@ -44,15 +46,46 @@ const roleRedirectMap: Record<Role, string> = {
 
 export default function Page() {
   const [selected, setSelected] = useState<Role | null>(null);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
   const router = useRouter();
+
+  const { mutate, isPending } = useLogin({
+    onSuccess: (data) => {
+      if (data?.token) {
+        document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; samesite=lax`;
+      }
+
+      if (selected) {
+        router.push(roleRedirectMap[selected]);
+      }
+    },
+    onError: (error) => {
+      console.error("Login failed:", error.message);
+    },
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selected) return;
 
-    // redirect based on selected role
-    router.push(roleRedirectMap[selected]);
+    mutate({
+      email: formData.email,
+      password: formData.password,
+    });
   };
 
   return (
@@ -64,7 +97,6 @@ export default function Page() {
         <p className="text-base text-slate-700">Select your role to continue</p>
       </div>
 
-      {/* Role Cards */}
       <div className="mb-10 grid w-full max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
         {roles.map((role) => {
           const Icon = role.icon;
@@ -73,6 +105,7 @@ export default function Page() {
           return (
             <button
               key={role.id}
+              type="button"
               onClick={() => setSelected(role.id as Role)}
               className={`flex flex-col items-center justify-center rounded-[20px] border px-7 py-6 text-center shadow-sm transition-all duration-200 ${
                 active
@@ -100,23 +133,19 @@ export default function Page() {
         })}
       </div>
 
-      {/* Login form */}
       {selected && (
         <div className="w-full max-w-md rounded-2xl border border-slate-100 bg-white px-10 py-10 shadow-xl max-md:mb-10">
           <h2 className="mb-8 text-center text-lg text-slate-800">
             Sign in as {roleFormTitleMap[selected]}
           </h2>
 
-          <form
-            className="space-y-6"
-            onSubmit={(e) => {
-              e.preventDefault();
-              router.push(roleRedirectMap[selected]); // ← Redirect based on role
-            }}
-          >
+          <form className="space-y-6" onSubmit={handleLogin}>
             <Input
               label="Email"
               type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
               placeholder="Enter your email"
               className="bg-white"
               theme="solid"
@@ -127,6 +156,9 @@ export default function Page() {
             <Input
               label="Password"
               type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
               placeholder="Enter your password"
               className="bg-white"
               theme="solid"
@@ -139,13 +171,17 @@ export default function Page() {
               type="submit"
               className="w-full"
               color="primary"
+              disabled={isPending}
             >
-              Sign In
+              {isPending ? "Signing In..." : "Sign In"}
             </Button>
           </form>
 
-          <p className="mt-4 text-center text-xs text-slate-500">
-            Demo: Use any email/password to login
+          <p className="mt-4 text-center text-sm text-slate-500">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-blue-500 hover:underline">
+              Sign Up
+            </Link>
           </p>
         </div>
       )}

@@ -8,7 +8,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/role-selection"); 
+    router.replace("/signin"); 
   }, [router]);
 
   return <Spinner />; 
