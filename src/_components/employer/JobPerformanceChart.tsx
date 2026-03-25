@@ -10,14 +10,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import type { EmployerDashboardJobPerformanceItem } from "~/APIs/features/employer";
 
-const data = [
-  { role: "Senior Full Stack De...", applicants: 45 },
-  { role: "Product Manager", applicants: 32 },
-  { role: "UX/UI Designer", applicants: 52 },
-  { role: "Data Scientist", applicants: 35 },
-  { role: "Devops Engineer", applicants: 29 },
-];
+interface JobPerformanceChartProps {
+  data: EmployerDashboardJobPerformanceItem[];
+}
 
 function WrappedTick(props: any) {
   const { x, y, payload } = props;
@@ -30,13 +27,7 @@ function WrappedTick(props: any) {
 
   return (
     <g transform={`translate(${x},${y})`}>
-      <text
-        x={0}
-        y={10}
-        textAnchor="middle"
-        fill="#6B7280"
-        fontSize={11}
-      >
+      <text x={0} y={10} textAnchor="middle" fill="#6B7280" fontSize={11}>
         <tspan x="0" dy="0">
           {line1}
         </tspan>
@@ -50,59 +41,80 @@ function WrappedTick(props: any) {
   );
 }
 
-export default function JobPerformanceChart() {
+export default function JobPerformanceChart({
+  data,
+}: JobPerformanceChartProps) {
+  const chartData = data
+    .slice(-5)
+    .map((item) => ({
+      role:
+        item.title.length > 24
+          ? `${item.title.slice(0, 24).trim()}...`
+          : item.title,
+      applicants: item.applicantsCount,
+    }));
+
+  const maxApplicants = Math.max(...chartData.map((item) => item.applicants), 0);
+  const upperBound = Math.max(5, Math.ceil(maxApplicants / 5) * 5);
+
   return (
     <div className="w-full rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-800">Job Performance</h3>
+        <h3 className="text-sm font-medium text-gray-800">Last Jobs Performance</h3>
       </div>
 
-      <div className="mt-6 h-56 w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            margin={{ top: 10, right: 16, left: 0, bottom: 28 }}
-            barCategoryGap={18}
-          >
-            <CartesianGrid strokeDasharray="3 3" vertical />
-            <YAxis
-              domain={[0, 60]}
-              ticks={[0, 15, 30, 45, 60]}
-              tick={{ fontSize: 12, fill: "#6B7280" }}
-              axisLine={{ stroke: "#E5E7EB" }}
-              tickLine={{ stroke: "#E5E7EB" }}
-            />
+      {!chartData.length ? (
+        <div className="mt-6 flex h-56 items-center justify-center rounded-xl border border-dashed border-gray-200 text-sm text-gray-500">
+          No job performance data available.
+        </div>
+      ) : (
+        <div className="mt-6 h-56 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={chartData}
+              margin={{ top: 10, right: 16, left: 0, bottom: 28 }}
+              barCategoryGap={18}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical />
+              <YAxis
+                domain={[0, upperBound]}
+                tick={{ fontSize: 12, fill: "#6B7280" }}
+                axisLine={{ stroke: "#E5E7EB" }}
+                tickLine={{ stroke: "#E5E7EB" }}
+                allowDecimals={false}
+              />
 
-            <XAxis
-              dataKey="role"
-              interval={0}
-              height={34}
-              tickMargin={8}
-              tick={<WrappedTick />}
-              axisLine={{ stroke: "#E5E7EB" }}
-              tickLine={false}
-            />
+              <XAxis
+                dataKey="role"
+                interval={0}
+                height={34}
+                tickMargin={8}
+                tick={<WrappedTick />}
+                axisLine={{ stroke: "#E5E7EB" }}
+                tickLine={false}
+              />
 
-            <Tooltip
-              cursor={{ fill: "rgba(16,185,129,0.08)" }}
-              contentStyle={{
-                borderRadius: 10,
-                borderColor: "#E5E7EB",
-                boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
-              }}
-              labelStyle={{ color: "#111827" }}
-            />
+              <Tooltip
+                cursor={{ fill: "rgba(16,185,129,0.08)" }}
+                contentStyle={{
+                  borderRadius: 10,
+                  borderColor: "#E5E7EB",
+                  boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+                }}
+                labelStyle={{ color: "#111827" }}
+              />
 
-            <Legend
-              verticalAlign="top"
-              align="center"
-              wrapperStyle={{ paddingBottom: 8 }}
-            />
+              <Legend
+                verticalAlign="top"
+                align="center"
+                wrapperStyle={{ paddingBottom: 8 }}
+              />
 
-            <Bar dataKey="applicants" fill="#10B981" maxBarSize={70} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+              <Bar dataKey="applicants" fill="#10B981" maxBarSize={70} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,108 +21,13 @@ import {
   PaginationNext,
 } from "~/components/ui/pagination";
 
-type Applicant = {
-  id: number;
-  initials: string;
-  name: string;
-  email: string;
-  phone: string;
-  jobApplied: string;
-  company: string;
-  experienceYears: number;
-  appliedDate: string;
-};
+import type { AdminApplicationItem } from "~/APIs/features/admin";
 
-const applicants: Applicant[] = [
-  {
-    id: 1,
-    initials: "JD",
-    name: "John Doe",
-    email: "john.doe@email.com",
-    phone: "(555) 123-4567",
-    jobApplied: "Senior Full Stack Developer",
-    company: "TechCorp Solutions",
-    experienceYears: 6,
-    appliedDate: "11/15/2024",
-  },
-  {
-    id: 2,
-    initials: "SJ",
-    name: "Sarah Johnson",
-    email: "sarah.j@email.com",
-    phone: "(555) 234-5678",
-    jobApplied: "Senior Full Stack Developer",
-    company: "TechCorp Solutions",
-    experienceYears: 7,
-    appliedDate: "11/14/2024",
-  },
-  {
-    id: 3,
-    initials: "MC",
-    name: "Michael Chen",
-    email: "michael.chen@email.com",
-    phone: "(555) 345-6789",
-    jobApplied: "Product Manager",
-    company: "TechCorp Solutions",
-    experienceYears: 5,
-    appliedDate: "11/13/2024",
-  },
-  {
-    id: 4,
-    initials: "ED",
-    name: "Emily Davis",
-    email: "emily.davis@email.com",
-    phone: "(555) 456-7890",
-    jobApplied: "UX/UI Designer",
-    company: "TechCorp Solutions",
-    experienceYears: 5,
-    appliedDate: "11/12/2024",
-  },
-  {
-    id: 5,
-    initials: "DW",
-    name: "David Wilson",
-    email: "david.w@email.com",
-    phone: "(555) 567-8901",
-    jobApplied: "Senior Full Stack Developer",
-    company: "TechCorp Solutions",
-    experienceYears: 3,
-    appliedDate: "11/11/2024",
-  },
-  {
-    id: 6,
-    initials: "LA",
-    name: "Lisa Anderson",
-    email: "lisa.anderson@email.com",
-    phone: "(555) 678-9012",
-    jobApplied: "Financial Analyst",
-    company: "FinanceHub Inc",
-    experienceYears: 4,
-    appliedDate: "11/16/2024",
-  },
-  {
-    id: 7,
-    initials: "RB",
-    name: "Robert Brown",
-    email: "robert.brown@email.com",
-    phone: "(555) 789-0123",
-    jobApplied: "Data Scientist",
-    company: "TechCorp Solutions",
-    experienceYears: 4,
-    appliedDate: "11/17/2024",
-  },
-  {
-    id: 8,
-    initials: "JL",
-    name: "Jennifer Lee",
-    email: "jennifer.lee@email.com",
-    phone: "(555) 890-1234",
-    jobApplied: "DevOps Engineer",
-    company: "TechCorp Solutions",
-    experienceYears: 6,
-    appliedDate: "11/10/2024",
-  },
-];
+interface AdminApplicantsTableSectionProps {
+  applications: AdminApplicationItem[];
+}
+
+const PAGE_SIZE = 8;
 
 function ExperiencePill({ years }: { years: number }) {
   return (
@@ -132,16 +37,57 @@ function ExperiencePill({ years }: { years: number }) {
   );
 }
 
-function Avatar({ initials }: { initials: string }) {
+function Avatar({ name }: { name: string }) {
+  const initials = name
+    ?.split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
   return (
     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-purple-600 text-xs font-semibold text-white">
-      {initials}
+      {initials || "NA"}
     </div>
   );
 }
 
-export default function AdminApplicantsTableSection() {
+export default function AdminApplicantsTableSection({
+  applications,
+}: AdminApplicantsTableSectionProps) {
   const [page, setPage] = React.useState(1);
+
+  const totalApplications = applications.length;
+  const totalPages = Math.max(1, Math.ceil(totalApplications / PAGE_SIZE));
+
+  React.useEffect(() => {
+    setPage(1);
+  }, [applications]);
+
+  React.useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const paginatedApplications = React.useMemo(() => {
+    const startIndex = (page - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    return applications.slice(startIndex, endIndex);
+  }, [applications, page]);
+
+  const startCount = totalApplications === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endCount = Math.min(page * PAGE_SIZE, totalApplications);
+
+  if (!applications.length) {
+    return (
+      <section className="w-full">
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 shadow-sm">
+          No applications found.
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="w-full">
@@ -171,58 +117,58 @@ export default function AdminApplicantsTableSection() {
           </TableHeader>
 
           <TableBody>
-            {applicants.map((a) => (
-              <TableRow key={a.id} className="border-gray-200">
-                {/* Applicant */}
+            {paginatedApplications.map((application) => (
+              <TableRow key={application._id} className="border-gray-200">
                 <TableCell className="px-6 py-5">
                   <div className="flex items-center gap-4">
-                    <Avatar initials={a.initials} />
+                    <Avatar name={application.applicantDetails?.name ?? ""} />
 
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium text-gray-900">
-                        {a.name}
+                        {application.applicantDetails?.name || "-"}
                       </div>
-                      <div className="text-xs text-gray-500">ID: {a.id}</div>
+                      <div className="text-xs text-gray-500">
+                        ID: {application._id}
+                      </div>
                     </div>
                   </div>
                 </TableCell>
 
-                {/* Contact */}
                 <TableCell className="px-6 py-5">
                   <div className="space-y-2 text-sm text-gray-700">
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-gray-500" />
-                      <span className="truncate">{a.email}</span>
+                      <span className="truncate">
+                        {application.applicantDetails?.email || "-"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4 text-gray-500" />
-                      <span>{a.phone}</span>
+                      <span>{application.applicantDetails?.phone || "-"}</span>
                     </div>
                   </div>
                 </TableCell>
 
-                {/* Job Applied */}
                 <TableCell className="px-6 py-5 text-sm text-gray-700">
                   <span className="block max-w-[220px] whitespace-normal leading-5">
-                    {a.jobApplied}
+                    {application.job?.title || "-"}
                   </span>
                 </TableCell>
 
-                {/* Company */}
                 <TableCell className="px-6 py-5 text-sm text-gray-700">
                   <span className="block max-w-[180px] whitespace-normal leading-5">
-                    {a.company}
+                    {application.company?.name || "-"}
                   </span>
                 </TableCell>
 
-                {/* Experience */}
                 <TableCell className="px-6 py-5">
-                  <ExperiencePill years={a.experienceYears} />
+                  <ExperiencePill
+                    years={application.applicantDetails?.experience ?? 0}
+                  />
                 </TableCell>
 
-                {/* Applied Date */}
                 <TableCell className="px-6 py-5 text-sm text-gray-700">
-                  {a.appliedDate}
+                  {new Date(application.appliedDate).toLocaleDateString()}
                 </TableCell>
               </TableRow>
             ))}
@@ -230,10 +176,9 @@ export default function AdminApplicantsTableSection() {
         </Table>
       </div>
 
-      {/* Footer */}
       <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-gray-600">
-          Showing {applicants.length} of {applicants.length} applicants
+          Showing {startCount}-{endCount} of {totalApplications} applicants
         </p>
 
         <Pagination className="justify-end">
@@ -243,44 +188,45 @@ export default function AdminApplicantsTableSection() {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  setPage((p) => Math.max(1, p - 1));
+                  setPage((prev) => Math.max(1, prev - 1));
                 }}
+                className={
+                  page === 1 ? "pointer-events-none opacity-50" : undefined
+                }
               />
             </PaginationItem>
 
-            <PaginationItem>
-              <PaginationLink
-                href="#"
-                isActive={page === 1}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPage(1);
-                }}
-              >
-                1
-              </PaginationLink>
-            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, index) => {
+              const pageNumber = index + 1;
 
-            <PaginationItem>
-              <PaginationLink
-                href="#"
-                isActive={page === 2}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPage(2);
-                }}
-              >
-                2
-              </PaginationLink>
-            </PaginationItem>
+              return (
+                <PaginationItem key={pageNumber}>
+                  <PaginationLink
+                    href="#"
+                    isActive={page === pageNumber}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPage(pageNumber);
+                    }}
+                  >
+                    {pageNumber}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
 
             <PaginationItem>
               <PaginationNext
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  setPage((p) => Math.min(2, p + 1));
+                  setPage((prev) => Math.min(totalPages, prev + 1));
                 }}
+                className={
+                  page === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : undefined
+                }
               />
             </PaginationItem>
           </PaginationContent>
