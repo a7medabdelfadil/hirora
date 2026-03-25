@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client";
 
 import React, { useState } from "react";
@@ -11,22 +12,32 @@ import Button from "~/_components/global/Button";
 import Input from "~/_components/global/Input";
 import Link from "next/link";
 import { useLogin } from "~/APIs/hooks/useAuth";
+import { toast } from "react-toastify";
 
 type Role = "admin" | "employer" | "candidate";
+
+type FormErrorsType = {
+  email?: string;
+  password?: string;
+  role?: string;
+};
 
 const roles = [
   {
     id: "admin",
+    role: "Admin",
     title: "System administration and analytics",
     icon: HiOutlineBuildingOffice2,
   },
   {
     id: "employer",
+    role: "Employer",
     title: "Post jobs and review applicants",
     icon: HiOutlineBriefcase,
   },
   {
     id: "candidate",
+    role: "Job Seeker",
     title: "Search and apply for jobs",
     icon: HiOutlineUser,
   },
@@ -50,6 +61,7 @@ export default function Page() {
     email: "",
     password: "",
   });
+  const [errors, setErrors] = useState<FormErrorsType>({});
 
   const router = useRouter();
 
@@ -63,10 +75,65 @@ export default function Page() {
         router.push(roleRedirectMap[selected]);
       }
     },
-    onError: (error) => {
-      console.error("Login failed:", error.message);
+    onError: (error: any) => {
+      const backendMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Login failed";
+
+      let message = "Login failed. Please try again.";
+
+      if (
+        backendMessage === "Invalid credentials" ||
+        backendMessage === "Unauthorized" ||
+        backendMessage === "Invalid email or password"
+      ) {
+        message = "Incorrect email or password.";
+        setErrors((prev) => ({
+          ...prev,
+          email: " ",
+          password: "Incorrect email or password",
+        }));
+      } else if (backendMessage === "User not found") {
+        message = "No account was found with this email.";
+        setErrors((prev) => ({
+          ...prev,
+          email: "No account was found with this email",
+        }));
+      } else if (backendMessage === "Too many requests") {
+        message = "Too many attempts. Please try again later.";
+      } else {
+        message = backendMessage;
+      }
+
+      toast.error(message);
     },
   });
+
+  const validateForm = () => {
+    const newErrors: FormErrorsType = {};
+
+    if (!selected) {
+      newErrors.role = "Please select your role";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)
+    ) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -75,15 +142,33 @@ export default function Page() {
       ...prev,
       [name]: value,
     }));
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
+
+  const handleSelectRole = (role: Role) => {
+    setSelected(role);
+    setErrors((prev) => ({
+      ...prev,
+      role: "",
+    }));
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selected) return;
+    const isValid = validateForm();
+
+    if (!isValid) {
+      toast.error("Please fix the form errors");
+      return;
+    }
 
     mutate({
-      email: formData.email,
+      email: formData.email.trim(),
       password: formData.password,
     });
   };
@@ -95,6 +180,9 @@ export default function Page() {
           <HiOutlineBriefcase className="h-12 w-12" />
         </div>
         <p className="text-base text-slate-700">Select your role to continue</p>
+        {errors.role && (
+          <p className="text-sm text-red-500">{errors.role}</p>
+        )}
       </div>
 
       <div className="mb-10 grid w-full max-w-5xl grid-cols-1 gap-6 md:grid-cols-3">
@@ -106,7 +194,7 @@ export default function Page() {
             <button
               key={role.id}
               type="button"
-              onClick={() => setSelected(role.id as Role)}
+              onClick={() => handleSelectRole(role.id as Role)}
               className={`flex flex-col items-center justify-center rounded-[20px] border px-7 py-6 text-center shadow-sm transition-all duration-200 ${
                 active
                   ? "border-2 border-blue-500 bg-blue-50/40 md:scale-[1.07]"
@@ -121,6 +209,13 @@ export default function Page() {
                 <Icon className="h-10 w-10" />
               </div>
 
+              <p
+                className={`text-lg font-semibold ${
+                  active ? "text-blue-700" : "text-slate-800"
+                }`}
+              >
+                {role.role}
+              </p>
               <p
                 className={`text-base ${
                   active ? "text-blue-700" : "text-slate-800"
@@ -140,31 +235,41 @@ export default function Page() {
           </h2>
 
           <form className="space-y-6" onSubmit={handleLogin}>
-            <Input
-              label="Email"
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              className="bg-white"
-              theme="solid"
-              border="gray"
-              rounded="lg"
-            />
+            <div>
+              <Input
+                label="Email"
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+                className="bg-white"
+                theme="solid"
+                border="gray"
+                rounded="lg"
+              />
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+              )}
+            </div>
 
-            <Input
-              label="Password"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              className="bg-white"
-              theme="solid"
-              border="gray"
-              rounded="lg"
-            />
+            <div>
+              <Input
+                label="Password"
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                className="bg-white"
+                theme="solid"
+                border="gray"
+                rounded="lg"
+              />
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+              )}
+            </div>
 
             <Button
               as="button"

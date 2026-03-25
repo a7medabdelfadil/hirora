@@ -71,7 +71,7 @@ function JobPostingPage() {
                 </div>
             </section>
             <section className="mt-4 mb-10">
-                <ApplicantsCardsSection />
+                <ApplicantsCardsSection applications={[]} />
             </section>
         </Container>
     );

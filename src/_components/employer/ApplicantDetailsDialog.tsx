@@ -19,7 +19,7 @@ import {
   DialogDescription,
 } from "~/components/ui/dialog";
 
-type Applicant = {
+export type Applicant = {
   id: string;
   initials: string;
   name: string;
@@ -55,6 +55,16 @@ function InfoRow({
   );
 }
 
+interface ApplicantDetailsDialogProps {
+  applicant?: Applicant;
+  trigger: React.ReactNode;
+  onReject?: (id: string) => void;
+  onReviewLater?: (id: string) => void;
+  onShortlist?: (id: string) => void;
+  onDownloadResume?: (id: string) => void;
+  isSubmitting?: boolean;
+}
+
 export default function ApplicantDetailsDialog({
   applicant,
   trigger,
@@ -62,20 +72,22 @@ export default function ApplicantDetailsDialog({
   onReviewLater,
   onShortlist,
   onDownloadResume,
-}: {
-  applicant: Applicant;
-  trigger: React.ReactNode;
-  onReject?: (id: string) => void;
-  onReviewLater?: (id: string) => void;
-  onShortlist?: (id: string) => void;
-  onDownloadResume?: (id: string) => void;
-}) {
+  isSubmitting = false,
+}: ApplicantDetailsDialogProps) {
+  const [open, setOpen] = React.useState(false);
+
+  if (!applicant) return null;
+
+  const handleAction = (callback?: (id: string) => void) => {
+    callback?.(applicant.id);
+    setOpen(false);
+  };
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent className="max-w-[820px] p-0 overflow-hidden rounded-2xl">
-        {/* ✅ Required for accessibility (hidden, doesn't affect UI) */}
+      <DialogContent className="max-w-[820px] overflow-hidden rounded-2xl p-0">
         <DialogHeader className="sr-only">
           <DialogTitle>Applicant Details</DialogTitle>
           <DialogDescription>
@@ -83,7 +95,6 @@ export default function ApplicantDetailsDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Header */}
         <div className="flex items-start gap-4 p-6">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-blue-600 text-sm font-semibold text-white">
             {applicant.initials}
@@ -101,56 +112,42 @@ export default function ApplicantDetailsDialog({
 
         <div className="h-px w-full bg-gray-200" />
 
-        {/* Body */}
         <div className="max-h-[70vh] space-y-8 overflow-y-auto p-6">
-          {/* Contact */}
           <div>
             <div className="text-sm font-semibold text-gray-900">
               Contact Information
             </div>
             <div className="mt-3 space-y-3">
-              <InfoRow
-                icon={<Mail className="h-4 w-4" />}
-                text={applicant.email}
-              />
-              <InfoRow
-                icon={<Phone className="h-4 w-4" />}
-                text={applicant.phone}
-              />
+              <InfoRow icon={<Mail className="h-4 w-4" />} text={applicant.email} />
+              <InfoRow icon={<Phone className="h-4 w-4" />} text={applicant.phone} />
             </div>
           </div>
 
-          {/* Experience */}
           <div>
-            <div className="text-sm font-semibold text-gray-900">
-              Experience
-            </div>
+            <div className="text-sm font-semibold text-gray-900">Experience</div>
             <div className="mt-3 text-sm text-gray-700">
               {applicant.years} years of professional experience
             </div>
           </div>
 
-          {/* Skills */}
           <div>
             <div className="text-sm font-semibold text-gray-900">Skills</div>
             <div className="mt-3 flex flex-wrap gap-3">
-              {applicant.skills.map((s) => (
-                <Chip key={s}>{s}</Chip>
-              ))}
+              {applicant.skills.length ? (
+                applicant.skills.map((s) => <Chip key={s}>{s}</Chip>)
+              ) : (
+                <span className="text-sm text-gray-500">No skills provided.</span>
+              )}
             </div>
           </div>
 
-          {/* Cover Letter */}
           <div>
-            <div className="text-sm font-semibold text-gray-900">
-              Cover Letter
-            </div>
+            <div className="text-sm font-semibold text-gray-900">Cover Letter</div>
             <div className="mt-3 text-sm leading-6 text-gray-700">
               {applicant.coverLetter}
             </div>
           </div>
 
-          {/* Resume */}
           <div>
             <div className="text-sm font-semibold text-gray-900">Resume</div>
 
@@ -167,12 +164,12 @@ export default function ApplicantDetailsDialog({
 
         <div className="h-px w-full bg-gray-200" />
 
-        {/* Footer buttons */}
         <div className="grid grid-cols-1 gap-3 p-6 sm:grid-cols-3">
           <button
             type="button"
-            onClick={() => onReject?.(applicant.id)}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-red-600 font-medium text-white transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/30"
+            disabled={isSubmitting}
+            onClick={() => handleAction(onReject)}
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-red-600 font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <CircleX className="h-5 w-5" />
             Reject
@@ -180,8 +177,9 @@ export default function ApplicantDetailsDialog({
 
           <button
             type="button"
-            onClick={() => onReviewLater?.(applicant.id)}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-amber-600 font-medium text-white transition hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500/30"
+            disabled={isSubmitting}
+            onClick={() => handleAction(onReviewLater)}
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-amber-600 font-medium text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Clock className="h-5 w-5" />
             Review Later
@@ -189,8 +187,9 @@ export default function ApplicantDetailsDialog({
 
           <button
             type="button"
-            onClick={() => onShortlist?.(applicant.id)}
-            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-green-600 font-medium text-white transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+            disabled={isSubmitting}
+            onClick={() => handleAction(onShortlist)}
+            className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-green-600 font-medium text-white transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <CheckCircle2 className="h-5 w-5" />
             Shortlist

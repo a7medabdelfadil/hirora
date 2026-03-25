@@ -21,106 +21,108 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "~/components/ui/pagination";
+import { type AdminCompanyItem } from "~/APIs/features/admin";
+import { useUpdateCompanyStatus } from "~/APIs/hooks/useAdmin";
 
-type CompanyStatus = "active" | "inactive";
 
-type Company = {
-  id: number;
-  name: string;
-  industry: string;
-  location: string;
-  size: string;
-  jobsPosted: number;
-  status: CompanyStatus;
-  logoUrl: string;
-};
+interface CompaniesTableSectionProps {
+  companies: AdminCompanyItem[];
+  onStatusChanged?: () => unknown;
+}
 
-const companies: Company[] = [
-  {
-    id: 1,
-    name: "TechCorp Solutions",
-    industry: "Technology",
-    location: "San Francisco, CA",
-    size: "500-1000",
-    jobsPosted: 12,
-    status: "active",
-    logoUrl:
-      "/images/job-profile.png",
-  },
-  {
-    id: 2,
-    name: "FinanceHub Inc",
-    industry: "Finance",
-    location: "New York, NY",
-    size: "200-500",
-    jobsPosted: 8,
-    status: "active",
-    logoUrl:
-      "/images/job-profile.png",
-  },
-  {
-    id: 3,
-    name: "HealthCare Plus",
-    industry: "Healthcare",
-    location: "Boston, MA",
-    size: "1000+",
-    jobsPosted: 15,
-    status: "active",
-    logoUrl:
-      "/images/job-profile.png",
-  },
-  {
-    id: 4,
-    name: "EduLearn Academy",
-    industry: "Education",
-    location: "Austin, TX",
-    size: "100-200",
-    jobsPosted: 5,
-    status: "active",
-    logoUrl:
-      "/images/job-profile.png",
-  },
-  {
-    id: 5,
-    name: "RetailWorld",
-    industry: "Retail",
-    location: "Chicago, IL",
-    size: "50-100",
-    jobsPosted: 3,
-    status: "inactive",
-    logoUrl:
-      "/images/job-profile.png",
-  },
-];
+const PAGE_SIZE = 5;
 
-function StatusPill({ status }: { status: CompanyStatus }) {
-  const cls =
-    status === "active"
-      ? "bg-green-100 text-green-700"
-      : "bg-gray-100 text-gray-700";
+function getStatusClasses(status?: string) {
+  const normalizedStatus = status?.toLowerCase();
 
+  switch (normalizedStatus) {
+    case "active":
+      return "bg-green-100 text-green-700";
+    case "pending":
+      return "bg-yellow-100 text-yellow-700";
+    case "blocked":
+      return "bg-red-100 text-red-700";
+    case "inactive":
+      return "bg-gray-100 text-gray-700";
+    default:
+      return "bg-gray-100 text-gray-700";
+  }
+}
+
+function StatusPill({ status }: { status?: string }) {
   return (
-    <span className={`inline-flex rounded-full px-4 py-2 text-sm font-medium ${cls}`}>
-      {status}
+    <span
+      className={`inline-flex rounded-full px-4 py-2 text-sm font-medium ${getStatusClasses(
+        status,
+      )}`}
+    >
+      {status || "unknown"}
     </span>
   );
 }
 
-function JobsBadge({ n }: { n: number }) {
+function JobsBadge({ n }: { n?: number }) {
   return (
     <span className="inline-flex min-w-[40px] justify-center rounded-full bg-blue-100 px-3 py-2 text-sm font-medium text-blue-700">
-      {n}
+      {n ?? 0}
     </span>
   );
 }
 
-export default function CompaniesTableSection() {
-  // dummy pagination state
+export default function CompaniesTableSection({
+  companies,
+  onStatusChanged,
+}: CompaniesTableSectionProps) {
   const [page, setPage] = React.useState(1);
+
+  const totalCompanies = companies.length;
+  const totalPages = Math.max(1, Math.ceil(totalCompanies / PAGE_SIZE));
+
+  React.useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
+
+  const paginatedCompanies = React.useMemo(() => {
+    const startIndex = (page - 1) * PAGE_SIZE;
+    const endIndex = startIndex + PAGE_SIZE;
+    return companies.slice(startIndex, endIndex);
+  }, [companies, page]);
+
+  const startCount = totalCompanies === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const endCount = Math.min(page * PAGE_SIZE, totalCompanies);
+
+  const { mutate: updateCompanyStatus, isPending: isUpdatingStatus } =
+    useUpdateCompanyStatus({
+      onSuccess: async () => {
+        await onStatusChanged?.();
+      },
+    });
+
+  const handleToggleStatus = (company: AdminCompanyItem) => {
+    const currentStatus = company.status?.toLowerCase();
+    const nextStatus = currentStatus === "active" ? "inactive" : "active";
+
+    updateCompanyStatus({
+      companyId: company._id,
+      status: nextStatus,
+    });
+  };
+
+  if (!companies.length) {
+    return (
+      <section className="w-full">
+        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center text-sm text-gray-500 shadow-sm">
+          No companies found.
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="w-full">
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
         <Table>
           <TableHeader className="bg-white">
             <TableRow className="hover:bg-transparent">
@@ -149,15 +151,14 @@ export default function CompaniesTableSection() {
           </TableHeader>
 
           <TableBody>
-            {companies.map((c) => (
-              <TableRow key={c.id} className="border-gray-200">
-                {/* Company */}
+            {paginatedCompanies.map((company) => (
+              <TableRow key={company._id} className="border-gray-200">
                 <TableCell className="px-6 py-5">
                   <div className="flex items-center gap-4">
                     <div className="relative h-10 w-10 overflow-hidden rounded-lg bg-gray-100">
                       <Image
-                        src={c.logoUrl}
-                        alt={c.name}
+                        src="/images/job-profile.png"
+                        alt={company.name}
                         fill
                         className="object-cover"
                       />
@@ -165,67 +166,78 @@ export default function CompaniesTableSection() {
 
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium text-gray-900">
-                        {c.name}
+                        {company.name}
                       </div>
-                      <div className="text-sm text-gray-500">ID: {c.id}</div>
+                      <div className="truncate text-sm text-gray-500">
+                        ID: {company._id}
+                      </div>
                     </div>
                   </div>
                 </TableCell>
 
-                {/* Industry */}
                 <TableCell className="px-6 py-5 text-sm text-gray-800">
-                  {c.industry}
+                  {company.industry || "-"}
                 </TableCell>
 
-                {/* Location */}
                 <TableCell className="px-6 py-5 text-sm text-gray-800">
-                  {c.location}
+                  {company.location || "-"}
                 </TableCell>
 
-                {/* Size */}
                 <TableCell className="px-6 py-5 text-sm text-gray-800">
-                  {c.size}
+                  {company.size || "-"}
                 </TableCell>
 
-                {/* Jobs Posted */}
                 <TableCell className="px-6 py-5">
-                  <JobsBadge n={c.jobsPosted} />
+                  <JobsBadge n={0} />
                 </TableCell>
 
-                {/* Status */}
                 <TableCell className="px-6 py-5">
-                  <StatusPill status={c.status} />
-                </TableCell>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleStatus(company)}
+                    disabled={isUpdatingStatus}
+                    aria-label={`Toggle status for ${company.name}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60 ${company.status?.toLowerCase() === "active"
+                        ? "bg-green-500"
+                        : "bg-gray-300"
+                      }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${company.status?.toLowerCase() === "active"
+                          ? "translate-x-5"
+                          : "translate-x-1"
+                        }`}
+                    />
+                  </button>                </TableCell>
 
-                {/* Actions */}
                 <TableCell className="px-6 py-5">
                   <div className="flex items-center gap-5">
-                    <button
+                    {/* <button
                       type="button"
-                      className="text-gray-600 hover:text-gray-900"
+                      className="text-gray-600 transition hover:text-gray-900"
                       aria-label="View"
                       title="View"
-                      onClick={() => console.log("view", c.id)}
+                      onClick={() => console.log("view", company._id)}
                     >
                       <Eye className="h-4 w-4" />
-                    </button>
+                    </button> */}
 
                     <button
                       type="button"
-                      className="text-gray-600 hover:text-gray-900"
+                      className="text-gray-600 transition hover:text-gray-900"
                       aria-label="Edit"
                       title="Edit"
-                      onClick={() => console.log("edit", c.id)}
+                      onClick={() => console.log("edit", company._id)}
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
 
                     <button
                       type="button"
-                      className="text-red-600 hover:text-red-700"
+                      className="text-red-600 transition hover:text-red-700"
                       aria-label="Delete"
                       title="Delete"
-                      onClick={() => console.log("delete", c.id)}
+                      onClick={() => console.log("delete", company._id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -237,10 +249,9 @@ export default function CompaniesTableSection() {
         </Table>
       </div>
 
-      {/* Footer */}
       <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-gray-600">
-          Showing {companies.length} of {companies.length} companies
+          Showing {startCount}-{endCount} of {totalCompanies} companies
         </p>
 
         <Pagination className="justify-end">
@@ -250,44 +261,45 @@ export default function CompaniesTableSection() {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  setPage((p) => Math.max(1, p - 1));
+                  setPage((prev) => Math.max(1, prev - 1));
                 }}
+                className={
+                  page === 1 ? "pointer-events-none opacity-50" : undefined
+                }
               />
             </PaginationItem>
 
-            <PaginationItem>
-              <PaginationLink
-                href="#"
-                isActive={page === 1}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPage(1);
-                }}
-              >
-                1
-              </PaginationLink>
-            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, index) => {
+              const pageNumber = index + 1;
 
-            <PaginationItem>
-              <PaginationLink
-                href="#"
-                isActive={page === 2}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setPage(2);
-                }}
-              >
-                2
-              </PaginationLink>
-            </PaginationItem>
+              return (
+                <PaginationItem key={pageNumber}>
+                  <PaginationLink
+                    href="#"
+                    isActive={page === pageNumber}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setPage(pageNumber);
+                    }}
+                  >
+                    {pageNumber}
+                  </PaginationLink>
+                </PaginationItem>
+              );
+            })}
 
             <PaginationItem>
               <PaginationNext
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  setPage((p) => Math.min(2, p + 1));
+                  setPage((prev) => Math.min(totalPages, prev + 1));
                 }}
+                className={
+                  page === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : undefined
+                }
               />
             </PaginationItem>
           </PaginationContent>
