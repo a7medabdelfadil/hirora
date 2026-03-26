@@ -152,6 +152,49 @@ export interface UpdateEmployerApplicationStatusPayload {
   status: EmployerApplicationStatus;
 }
 
+export interface EmployerAllApplicationsJob {
+  _id: string;
+  title: string;
+  category: string;
+  type: string;
+  location: string;
+  salaryMin: number;
+  salaryMax: number;
+  status: string;
+}
+
+export interface EmployerAllApplicationsApplicant {
+  profile: {
+    skills: string[];
+  };
+  _id: string;
+  name: string;
+  email: string;
+}
+
+export interface EmployerAllApplicationsApplicantDetails {
+  name: string;
+  email: string;
+  phone: string;
+  experience: number;
+  resume: string;
+  coverLetter: string;
+  skills: string[];
+}
+
+export interface EmployerAllApplicationsItem {
+  applicantDetails: EmployerAllApplicationsApplicantDetails;
+  _id: string;
+  job: EmployerAllApplicationsJob;
+  applicant: EmployerAllApplicationsApplicant;
+  company: string;
+  status: string;
+  appliedDate: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 /* =========================
    EXISTING APIS
 ========================= */
@@ -195,6 +238,16 @@ export const updateEmployerJob = async ({
   return response.data;
 };
 
+export interface DeleteEmployerJobPayload {
+  jobId: string;
+}
+
+export const deleteEmployerJob = async ({
+  jobId,
+}: DeleteEmployerJobPayload): Promise<void> => {
+  await axiosInstance.delete(`/api/employer/jobs/${jobId}`);
+};
+
 export const getEmployerJobApplications = async (
   jobId: string,
 ): Promise<EmployerJobApplicationItem[]> => {
@@ -204,6 +257,15 @@ export const getEmployerJobApplications = async (
 
   return response.data;
 };
+
+export const getEmployerApplications =
+  async (): Promise<EmployerAllApplicationsItem[]> => {
+    const response = await axiosInstance.get<EmployerAllApplicationsItem[]>(
+      "/api/employer/applications",
+    );
+
+    return response.data;
+  };
 
 export const updateEmployerApplicationStatus = async ({
   applicationId,

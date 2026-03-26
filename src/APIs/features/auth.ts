@@ -43,3 +43,46 @@ export const login = async (
 
   return response.data;
 };
+
+export type AuthUserRole = "jobseeker" | "employer" | "admin";
+
+export interface AuthMeJobseekerProfile {
+  resume: string;
+  skills: string[];
+  experience: number;
+  phone: string;
+}
+
+export interface AuthMeBaseUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: AuthUserRole;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AuthMeJobseekerUser extends AuthMeBaseUser {
+  role: "jobseeker";
+  profile: AuthMeJobseekerProfile;
+}
+
+export interface AuthMeEmployerUser extends AuthMeBaseUser {
+  role: "employer";
+  company: string;
+}
+
+export interface AuthMeAdminUser extends AuthMeBaseUser {
+  role: "admin";
+}
+
+export type AuthMeResponse =
+  | AuthMeJobseekerUser
+  | AuthMeEmployerUser
+  | AuthMeAdminUser;
+
+export const getAuthMe = async (): Promise<AuthMeResponse> => {
+  const response = await axiosInstance.get<AuthMeResponse>("/api/auth/me");
+
+  return response.data;
+};

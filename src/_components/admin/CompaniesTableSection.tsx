@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 import {
   Table,
@@ -21,45 +21,28 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "~/components/ui/pagination";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+
 import { type AdminCompanyItem } from "~/APIs/features/admin";
 import { useUpdateCompanyStatus } from "~/APIs/hooks/useAdmin";
-
 
 interface CompaniesTableSectionProps {
   companies: AdminCompanyItem[];
   onStatusChanged?: () => unknown;
+  onEditCompany?: (company: AdminCompanyItem) => void;
+  onDeleteCompany?: (company: AdminCompanyItem) => void;
+  isDeletingCompany?: boolean;
 }
 
 const PAGE_SIZE = 5;
-
-function getStatusClasses(status?: string) {
-  const normalizedStatus = status?.toLowerCase();
-
-  switch (normalizedStatus) {
-    case "active":
-      return "bg-green-100 text-green-700";
-    case "pending":
-      return "bg-yellow-100 text-yellow-700";
-    case "blocked":
-      return "bg-red-100 text-red-700";
-    case "inactive":
-      return "bg-gray-100 text-gray-700";
-    default:
-      return "bg-gray-100 text-gray-700";
-  }
-}
-
-function StatusPill({ status }: { status?: string }) {
-  return (
-    <span
-      className={`inline-flex rounded-full px-4 py-2 text-sm font-medium ${getStatusClasses(
-        status,
-      )}`}
-    >
-      {status || "unknown"}
-    </span>
-  );
-}
 
 function JobsBadge({ n }: { n?: number }) {
   return (
@@ -72,8 +55,14 @@ function JobsBadge({ n }: { n?: number }) {
 export default function CompaniesTableSection({
   companies,
   onStatusChanged,
+  onEditCompany,
+  onDeleteCompany,
+  isDeletingCompany = false,
 }: CompaniesTableSectionProps) {
   const [page, setPage] = React.useState(1);
+  const [companyToDelete, setCompanyToDelete] =
+    React.useState<AdminCompanyItem | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
 
   const totalCompanies = companies.length;
   const totalPages = Math.max(1, Math.ceil(totalCompanies / PAGE_SIZE));
@@ -188,7 +177,7 @@ export default function CompaniesTableSection({
                 </TableCell>
 
                 <TableCell className="px-6 py-5">
-                  <JobsBadge n={0} />
+                  <JobsBadge n={company.jobsPosted || 0} />
                 </TableCell>
 
                 <TableCell className="px-6 py-5">
@@ -197,47 +186,44 @@ export default function CompaniesTableSection({
                     onClick={() => handleToggleStatus(company)}
                     disabled={isUpdatingStatus}
                     aria-label={`Toggle status for ${company.name}`}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60 ${company.status?.toLowerCase() === "active"
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                      company.status?.toLowerCase() === "active"
                         ? "bg-green-500"
                         : "bg-gray-300"
-                      }`}
+                    }`}
                   >
                     <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${company.status?.toLowerCase() === "active"
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                        company.status?.toLowerCase() === "active"
                           ? "translate-x-5"
                           : "translate-x-1"
-                        }`}
+                      }`}
                     />
-                  </button>                </TableCell>
+                  </button>
+                </TableCell>
 
                 <TableCell className="px-6 py-5">
                   <div className="flex items-center gap-5">
-                    {/* <button
-                      type="button"
-                      className="text-gray-600 transition hover:text-gray-900"
-                      aria-label="View"
-                      title="View"
-                      onClick={() => console.log("view", company._id)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </button> */}
-
                     <button
                       type="button"
                       className="text-gray-600 transition hover:text-gray-900"
                       aria-label="Edit"
                       title="Edit"
-                      onClick={() => console.log("edit", company._id)}
+                      onClick={() => onEditCompany?.(company)}
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
 
                     <button
                       type="button"
-                      className="text-red-600 transition hover:text-red-700"
+                      className="text-red-600 transition hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
                       aria-label="Delete"
                       title="Delete"
-                      onClick={() => console.log("delete", company._id)}
+                      disabled={isDeletingCompany}
+                      onClick={() => {
+                        setCompanyToDelete(company);
+                        setIsDeleteDialogOpen(true);
+                      }}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -305,6 +291,57 @@ export default function CompaniesTableSection({
           </PaginationContent>
         </Pagination>
       </div>
+
+      <Dialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open);
+          if (!open) {
+            setCompanyToDelete(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {companyToDelete?.name}
+              </span>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground"
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setCompanyToDelete(null);
+              }}
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+              disabled={isDeletingCompany}
+              onClick={() => {
+                if (companyToDelete) {
+                  onDeleteCompany?.(companyToDelete);
+                }
+                setIsDeleteDialogOpen(false);
+                setCompanyToDelete(null);
+              }}
+            >
+              {isDeletingCompany ? "Deleting..." : "Delete"}
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

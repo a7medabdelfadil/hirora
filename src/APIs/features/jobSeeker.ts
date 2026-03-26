@@ -156,3 +156,12 @@ export const getJobseekerApplications =
 
     return response.data;
   };
+
+  export const getJobseekerApplicationsStats =
+  async (): Promise<JobseekerApplicationsStats> => {
+    const response = await axiosInstance.get<JobseekerApplicationsStats>(
+      "/api/jobseeker/applications/stats",
+    );
+
+    return response.data;
+  };

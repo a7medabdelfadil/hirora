@@ -1,18 +1,18 @@
 import axiosInstance from "../axios";
 
 export interface MonthlyApplicationItem {
-  _id?: number;
-  count?: number;
+  _id: number;
+  count: number;
 }
 
 export interface StatusBreakdownItem {
-  _id?: string;
-  count?: number;
+  _id: string;
+  count: number;
 }
 
 export interface JobsByCategoryItem {
-  _id?: string;
-  count?: number;
+  _id: string;
+  count: number;
 }
 
 export interface AdminDashboardResponse {
@@ -42,6 +42,7 @@ export interface AdminCompanyItem {
   createdAt: string;
   updatedAt: string;
   __v: number;
+  jobsPosted?: number;
 }
 
 export interface CreateCompanyPayload {
@@ -132,6 +133,14 @@ export interface AdminApplicationItem {
   __v: number;
 }
 
+export interface DeleteCompanyPayload {
+  companyId: string;
+}
+
+export interface DeleteCompanyResponse {
+  message?: string;
+}
+
 export const getAdminDashboard = async (): Promise<AdminDashboardResponse> => {
   const response = await axiosInstance.get<AdminDashboardResponse>(
     "/api/admin/dashboard",
@@ -154,6 +163,32 @@ export const createCompany = async (
   const response = await axiosInstance.post<AdminCompanyItem>(
     "/api/admin/companies",
     payload,
+  );
+
+  return response.data;
+};
+
+export interface UpdateCompanyPayload extends CreateCompanyPayload {
+  companyId: string;
+}
+
+export const updateCompany = async ({
+  companyId,
+  ...payload
+}: UpdateCompanyPayload): Promise<AdminCompanyItem> => {
+  const response = await axiosInstance.put<AdminCompanyItem>(
+    `/api/admin/companies/${companyId}`,
+    payload,
+  );
+
+  return response.data;
+};
+
+export const deleteCompany = async ({
+  companyId,
+}: DeleteCompanyPayload): Promise<DeleteCompanyResponse> => {
+  const response = await axiosInstance.delete<DeleteCompanyResponse>(
+    `/api/admin/companies/${companyId}`,
   );
 
   return response.data;

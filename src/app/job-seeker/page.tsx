@@ -11,21 +11,47 @@ import {
 } from "react-icons/hi2";
 import Container from "~/_components/global/Container";
 import JobCard, { type Job } from "~/_components/job-seeker/JobCard";
+import { useJobseekerApplicationsStats } from "~/APIs/hooks/useJobSeeker";
 
 function JobSeekerPage() {
+  const { data: statsData } = useJobseekerApplicationsStats();
   const stats = [
     {
       title: "Jobs Applied",
+      value: statsData?.total ?? 0,
       iconBg: "bg-blue-600",
       Icon: HiOutlineDocumentText,
     },
-    { title: "In Review", iconBg: "bg-amber-500", Icon: FiClock },
+    {
+      title: "In Review",
+      value: statsData?.reviewing ?? 0,
+      iconBg: "bg-amber-500",
+      Icon: FiClock,
+    },
     {
       title: "Shortlisted",
+      value: statsData?.shortlisted ?? 0,
       iconBg: "bg-emerald-500",
       Icon: HiOutlineTrendingUp,
     },
-    { title: "Active Jobs", iconBg: "bg-purple-600", Icon: HiOutlineBriefcase },
+    {
+      title: "Accepted",
+      value: statsData?.accepted ?? 0,
+      iconBg: "bg-green-600",
+      Icon: HiOutlineTrendingUp,
+    },
+    {
+      title: "Rejected",
+      value: statsData?.rejected ?? 0,
+      iconBg: "bg-red-600",
+      Icon: HiOutlineDocumentText,
+    },
+    {
+      title: "Pending",
+      value: statsData?.pending ?? 0,
+      iconBg: "bg-yellow-500",
+      Icon: FiClock,
+    },
   ];
   const jobs: Job[] = [
     {
@@ -47,7 +73,7 @@ function JobSeekerPage() {
       salary: "$130,000 - $170,000",
       typeTag: "Full-time",
       categoryTag: "Product",
-     logoUrl:
+      logoUrl:
         "/images/job-profile.png",
     },
     {
@@ -111,8 +137,8 @@ function JobSeekerPage() {
           </div>
 
           {/* Cards */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {stats.map(({ title, iconBg, Icon }) => (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {stats.map(({ title, iconBg, Icon, value }) => (
               <div
                 key={title}
                 className="rounded-2xl border border-slate-200 bg-bgPrimary p-4 shadow-sm transition hover:shadow-md"
@@ -124,9 +150,12 @@ function JobSeekerPage() {
                     <Icon className="h-6 w-6 text-white" />
                   </div>
 
-                  <p className="truncate text-sm font-medium text-slate-700">
-                    {title}
-                  </p>
+                  <div>
+                    <p className="text-lg font-semibold text-slate-900">
+                      {value}
+                    </p>
+                    <p className="text-sm text-slate-500">{title}</p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -155,27 +184,27 @@ function JobSeekerPage() {
         </div>
       </section>
       <section className="w-full">
-      <div className="mx-auto px-4 py-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-slate-900">
-            Recommended Jobs
-          </h2>
+        <div className="mx-auto px-4 py-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-slate-900">
+              Recommended Jobs
+            </h2>
 
-          <Link
-            href="/job-seeker/find-jobs"
-            className="text-sm font-medium text-purple-700 hover:text-purple-800 hover:underline"
-          >
-            View All
-          </Link>
-        </div>
+            <Link
+              href="/job-seeker/find-jobs"
+              className="text-sm font-medium text-purple-700 hover:text-purple-800 hover:underline"
+            >
+              View All
+            </Link>
+          </div>
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {jobs.map((job) => (
-            <JobCard key={job.id} job={job} />
-          ))}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {jobs.map((job) => (
+              <JobCard key={job.id} job={job} />
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
     </Container>
   );
 }
