@@ -1,5 +1,30 @@
-import { useMutation, UseMutationOptions, useQuery, type UseQueryOptions } from "@tanstack/react-query";
-import { AdminApplicationItem, type AdminCompanyItem, type AdminDashboardResponse, AdminEmployerItem, AdminJobItem, createCompany, CreateCompanyPayload, getAdminApplications, getAdminCompanies, getAdminDashboard, getAdminEmployers, getAdminJobs, updateCompanyStatus, UpdateCompanyStatusPayload } from "../features/admin";
+import {
+  useMutation,
+  UseMutationOptions,
+  useQuery,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
+import {
+  AdminApplicationItem,
+  type AdminCompanyItem,
+  type AdminDashboardResponse,
+  AdminEmployerItem,
+  AdminJobItem,
+  createCompany,
+  CreateCompanyPayload,
+  deleteCompany,
+  DeleteCompanyPayload,
+  DeleteCompanyResponse,
+  getAdminApplications,
+  getAdminCompanies,
+  getAdminDashboard,
+  getAdminEmployers,
+  getAdminJobs,
+  updateCompany,
+  UpdateCompanyPayload,
+  updateCompanyStatus,
+  UpdateCompanyStatusPayload,
+} from "../features/admin";
 
 export const useAdminDashboard = (
   options?: Omit<
@@ -15,10 +40,7 @@ export const useAdminDashboard = (
 };
 
 export const useAdminCompanies = (
-  options?: Omit<
-    UseQueryOptions<AdminCompanyItem[]>,
-    "queryKey" | "queryFn"
-  >,
+  options?: Omit<UseQueryOptions<AdminCompanyItem[]>, "queryKey" | "queryFn">,
 ) => {
   return useQuery<AdminCompanyItem[]>({
     queryKey: ["admin-companies"],
@@ -36,11 +58,30 @@ export const useCreateCompany = (
   });
 };
 
-export const useAdminEmployers = (
-  options?: Omit<
-    UseQueryOptions<AdminEmployerItem[]>,
-    "queryKey" | "queryFn"
+export const useUpdateCompany = (
+  options?: UseMutationOptions<AdminCompanyItem, Error, UpdateCompanyPayload>,
+) => {
+  return useMutation<AdminCompanyItem, Error, UpdateCompanyPayload>({
+    mutationFn: updateCompany,
+    ...options,
+  });
+};
+
+export const useDeleteCompany = (
+  options?: UseMutationOptions<
+    DeleteCompanyResponse,
+    Error,
+    DeleteCompanyPayload
   >,
+) => {
+  return useMutation<DeleteCompanyResponse, Error, DeleteCompanyPayload>({
+    mutationFn: deleteCompany,
+    ...options,
+  });
+};
+
+export const useAdminEmployers = (
+  options?: Omit<UseQueryOptions<AdminEmployerItem[]>, "queryKey" | "queryFn">,
 ) => {
   return useQuery<AdminEmployerItem[]>({
     queryKey: ["admin-employers"],
@@ -56,21 +97,14 @@ export const useUpdateCompanyStatus = (
     UpdateCompanyStatusPayload
   >,
 ) => {
-  return useMutation<
-    AdminCompanyItem,
-    Error,
-    UpdateCompanyStatusPayload
-  >({
+  return useMutation<AdminCompanyItem, Error, UpdateCompanyStatusPayload>({
     mutationFn: updateCompanyStatus,
     ...options,
   });
 };
 
 export const useAdminJobs = (
-  options?: Omit<
-    UseQueryOptions<AdminJobItem[]>,
-    "queryKey" | "queryFn"
-  >,
+  options?: Omit<UseQueryOptions<AdminJobItem[]>, "queryKey" | "queryFn">,
 ) => {
   return useQuery<AdminJobItem[]>({
     queryKey: ["admin-jobs"],

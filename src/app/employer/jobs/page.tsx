@@ -7,6 +7,7 @@ import Container from "~/_components/global/Container";
 import type { EmployerJobItem } from "~/APIs/features/employer";
 import {
   useCreateEmployerJob,
+  useDeleteEmployerJob,
   useEmployerJobs,
   useUpdateEmployerJob,
 } from "~/APIs/hooks/useEmployer";
@@ -52,6 +53,9 @@ function JobPostingPage() {
   const [formData, setFormData] = useState<JobFormData>(emptyFormData);
   const [editStatus, setEditStatus] = useState("");
 
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState<EmployerJobItem | null>(null);
+
   const {
     data: jobs = [],
     isLoading,
@@ -72,6 +76,14 @@ function JobPostingPage() {
     useUpdateEmployerJob({
       onSuccess: async () => {
         handleCloseDialog();
+        await refetch();
+      },
+    });
+
+  const { mutate: deleteEmployerJob, isPending: isDeletingJob } =
+    useDeleteEmployerJob({
+      onSuccess: async () => {
+        handleCloseDeleteDialog();
         await refetch();
       },
     });
@@ -145,6 +157,22 @@ function JobPostingPage() {
     setSelectedJob(null);
     setFormData(emptyFormData);
     setEditStatus("");
+  };
+
+  const openDeleteConfirmDialog = (job: EmployerJobItem) => {
+    setJobToDelete(job);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
+    setJobToDelete(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!jobToDelete?._id) return;
+
+    deleteEmployerJob({ jobId: jobToDelete._id });
   };
 
   const handleSubmitJob = (e: React.FormEvent<HTMLFormElement>) => {
@@ -233,7 +261,7 @@ function JobPostingPage() {
         </div>
       </section>
 
-      <section className="mt-4 mb-10 w-full">
+      <section className="mb-10 mt-4 w-full">
         {isLoading ? (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {Array.from({ length: 4 }).map((_, index) => (
@@ -293,7 +321,12 @@ function JobPostingPage() {
             </button>
           </div>
         ) : (
-          <JobCardsSection jobs={filteredJobs} onEdit={openEditDialog} />
+          <JobCardsSection
+            jobs={filteredJobs}
+            onEdit={openEditDialog}
+            onDelete={openDeleteConfirmDialog}
+            isDeleting={isDeletingJob}
+          />
         )}
       </section>
 
@@ -438,10 +471,8 @@ function JobPostingPage() {
                   name="requirements"
                   value={formData.requirements}
                   onChange={handleInputChange}
-                  placeholder={`One requirement per line
-5+ years of experience
-React, Node.js, TypeScript`}
-                  rows={4}
+                  placeholder="Write each requirement on a new line"
+                  rows={2}
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                 />
               </div>
@@ -454,10 +485,8 @@ React, Node.js, TypeScript`}
                   name="responsibilities"
                   value={formData.responsibilities}
                   onChange={handleInputChange}
-                  placeholder={`One responsibility per line
-Build scalable apps
-Collaborate with the team`}
-                  rows={4}
+                  placeholder="Write each responsibility on a new line"
+                  rows={2}
                   className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                 />
               </div>
@@ -497,6 +526,49 @@ Collaborate with the team`}
               </button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={openDeleteDialog}
+        onOpenChange={(open) => {
+          setOpenDeleteDialog(open);
+          if (!open) {
+            setJobToDelete(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Delete Job</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-foreground">
+                {jobToDelete?.title}
+              </span>
+              ? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <button
+              type="button"
+              onClick={handleCloseDeleteDialog}
+              disabled={isDeletingJob}
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-gray-200 bg-white px-5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Cancel
+            </button>
+
+            <button
+              type="button"
+              onClick={handleConfirmDelete}
+              disabled={isDeletingJob}
+              className="inline-flex h-11 items-center justify-center rounded-xl bg-red-600 px-5 text-sm font-medium text-white shadow-sm transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isDeletingJob ? "Deleting..." : "Delete"}
+            </button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Container>

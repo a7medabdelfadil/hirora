@@ -4,9 +4,11 @@ import {
     ApplyToJobPayload,
     ApplyToJobResponse,
   getJobseekerApplications,
+  getJobseekerApplicationsStats,
   getJobseekerJobById,
   getJobseekerJobs,
   JobseekerApplicationsResponse,
+  JobseekerApplicationsStats,
   JobseekerJobDetails,
   JobseekerJobItem,
 } from "../features/jobSeeker";
@@ -59,6 +61,19 @@ export const useJobseekerApplications = (
   return useQuery<JobseekerApplicationsResponse>({
     queryKey: ["jobseeker-applications"],
     queryFn: getJobseekerApplications,
+    ...options,
+  });
+};
+
+export const useJobseekerApplicationsStats = (
+  options?: Omit<
+    UseQueryOptions<JobseekerApplicationsStats>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  return useQuery<JobseekerApplicationsStats>({
+    queryKey: ["jobseeker-applications-stats"],
+    queryFn: getJobseekerApplicationsStats,
     ...options,
   });
 };

@@ -7,9 +7,13 @@ import {
 import {
   createEmployerJob,
   CreateEmployerJobPayload,
+  deleteEmployerJob,
+  DeleteEmployerJobPayload,
+  EmployerAllApplicationsItem,
   type EmployerDashboardResponse,
   type EmployerJobApplicationItem,
   type EmployerJobItem,
+  getEmployerApplications,
   getEmployerDashboard,
   getEmployerJobApplications,
   getEmployerJobs,
@@ -68,6 +72,15 @@ export const useUpdateEmployerJob = (
   });
 };
 
+export const useDeleteEmployerJob = (
+  options?: UseMutationOptions<void, Error, DeleteEmployerJobPayload>,
+) => {
+  return useMutation<void, Error, DeleteEmployerJobPayload>({
+    mutationFn: deleteEmployerJob,
+    ...options,
+  });
+};
+
 export const useEmployerJobApplications = (
   jobId?: string,
   options?: Omit<
@@ -98,6 +111,19 @@ export const useUpdateEmployerApplicationStatus = (
     UpdateEmployerApplicationStatusPayload
   >({
     mutationFn: updateEmployerApplicationStatus,
+    ...options,
+  });
+};
+
+export const useEmployerApplications = (
+  options?: Omit<
+    UseQueryOptions<EmployerAllApplicationsItem[], Error>,
+    "queryKey" | "queryFn"
+  >,
+) => {
+  return useQuery<EmployerAllApplicationsItem[], Error>({
+    queryKey: ["employer-applications"],
+    queryFn: getEmployerApplications,
     ...options,
   });
 };

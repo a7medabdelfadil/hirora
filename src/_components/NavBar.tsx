@@ -21,6 +21,7 @@ import {
 } from "react-icons/hi2";
 import { HiOutlineUserGroup } from "react-icons/hi";
 import Cookies from "js-cookie";
+import { useAuthMe } from "~/APIs/hooks/useAuth";
 
 // ---------- ROLE HELPERS ----------
 
@@ -170,8 +171,8 @@ const NavBarLink = ({
       >
         <Icon
           className={`h-6 w-6 flex-shrink-0 ${isActive
-              ? activeTextClass
-              : `text-slate-400 ${currentRole === "admin" ? "group-hover:text-blue-600" : currentRole === "employer" ? "group-hover:text-emerald-600" : "group-hover:text-purple-600"}`
+            ? activeTextClass
+            : `text-slate-400 ${currentRole === "admin" ? "group-hover:text-blue-600" : currentRole === "employer" ? "group-hover:text-emerald-600" : "group-hover:text-purple-600"}`
             }`}
         />
         {!small && <span className="truncate">{label}</span>}
@@ -185,17 +186,13 @@ const NavBarLink = ({
 const NavBar = () => {
   const router = useRouter();
   const toggleNav = useBooleanValue((state: any) => state.toggle);
-  const [profile, setProfile] = useState(false);
-  const toggleProfile = () => setProfile((p) => !p);
 
   const [isClient, setIsClient] = useState(false);
-  const userData = useUserDataStore.getState().userData;
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const { theme, setTheme } = useTheme();
   const url = usePathname();
   const { t } = useTranslation();
 
@@ -237,7 +234,17 @@ const NavBar = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen]);
-
+  const { data: user, isLoading: isUserLoading } = useAuthMe();
+  const getInitials = (name?: string) => {
+    return (
+      name
+        ?.split(" ")
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((p) => p[0]?.toUpperCase())
+        .join("") || "NA"
+    );
+  };
   const OpenSideBar = () => setIsOpen((prev) => !prev);
 
   const { language, setLanguage } = useLanguageStore() as {
@@ -414,18 +421,37 @@ const NavBar = () => {
             <div className="fixed bottom-0 w-full">
               <div className="w-full border-t bg-white px-4 py-4">
                 {/* User info */}
-                <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
-                    A
+                <div className="flex items-center gap-3">
+                  {/* Avatar */}
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-sm font-semibold text-white shadow-sm">
+                    {getInitials(user?.name)}
                   </div>
 
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-slate-900">
-                      {roleUserName}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      useradmin@gmail.com
-                    </span>
+                  {/* Info */}
+                  <div className="flex flex-col min-w-0">
+                    {isUserLoading ? (
+                      <>
+                        <div className="h-4 w-24 animate-pulse rounded bg-slate-200" />
+                        <div className="mt-1 h-3 w-32 animate-pulse rounded bg-slate-100" />
+                      </>
+                    ) : (
+                      <>
+                        <span className="truncate text-sm font-semibold text-slate-900">
+                          {user?.name || roleUserName}
+                        </span>
+
+                        <span className="truncate text-xs text-slate-500">
+                          {user?.email || "-"}
+                        </span>
+                      </>
+                    )}
+
+                    {/* role badge */}
+                    {!isUserLoading && user?.role && (
+                      <span className="mt-1 w-fit rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium capitalize text-slate-600">
+                        {user.role}
+                      </span>
+                    )}
                   </div>
                 </div>
 

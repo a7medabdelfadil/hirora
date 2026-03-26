@@ -32,13 +32,13 @@ function AdminPage() {
       iconWrap: "bg-[#00C950]",
     },
     {
-      label: "Total Applicants",
+      label: "Total Job Seekers",
       value: data?.jobseekersCount ?? 0,
       icon: <Users className="h-5 w-5 text-white" />,
       iconWrap: "bg-[#AD46FF]",
     },
     {
-      label: "Total Jobs",
+      label: "Total Applicants",
       value: data?.applicationsCount ?? 0,
       icon: <Activity className="h-5 w-5 text-white" />,
       iconWrap: "bg-[#FF6900]",
@@ -85,11 +85,18 @@ function AdminPage() {
       </section>
 
       <section className="mt-4">
-        <AdminChartsSection />
+        <AdminChartsSection
+          monthlyApplications={data?.monthlyApplications ?? []}
+          jobsByCategory={data?.jobsByCategory ?? []}
+          isLoading={isLoading}
+        />
       </section>
 
       <section className="mb-10 mt-4">
-        <ApplicationStatusSection />
+        <ApplicationStatusSection
+          statusBreakdown={data?.statusBreakdown ?? []}
+          isLoading={isLoading}
+        />
       </section>
     </Container>
   );

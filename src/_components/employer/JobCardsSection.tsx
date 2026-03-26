@@ -8,6 +8,8 @@ import Link from "next/link";
 interface JobCardsSectionProps {
   jobs: EmployerJobItem[];
   onEdit?: (job: EmployerJobItem) => void;
+  onDelete?: (job: EmployerJobItem) => void;
+  isDeleting?: boolean;
 }
 
 function StatusPill({ status }: { status: string }) {
@@ -72,9 +74,9 @@ function formatSalary(min?: number, max?: number) {
 export default function JobCardsSection({
   jobs,
   onEdit,
+  onDelete,
+  isDeleting = false,
 }: JobCardsSectionProps) {
-  const onDelete = (id: string) => console.log("delete", id);
-
   if (!jobs.length) {
     return (
       <section className="w-full">
@@ -110,8 +112,9 @@ export default function JobCardsSection({
                 </button>
                 <button
                   type="button"
-                  onClick={() => onDelete(job._id)}
-                  className="text-red-500 hover:text-red-600"
+                  onClick={() => onDelete?.(job)}
+                  disabled={isDeleting}
+                  className="text-red-500 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
                   aria-label="Delete"
                   title="Delete"
                 >
@@ -150,7 +153,7 @@ export default function JobCardsSection({
               <span className="text-sm text-gray-600">
                 Posted {new Date(job.createdAt).toLocaleDateString()}
               </span>
-             <Link
+              <Link
                 href={`/employer/jobs/applicants/${job._id}`}
                 className="inline-flex items-center gap-2 text-sm font-medium text-green-600 hover:text-green-700"
               >
