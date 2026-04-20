@@ -10,6 +10,7 @@ export interface SignUpFormData {
 export interface LoginFormData {
   email: string;
   password: string;
+  role: "admin" | "employer" | "jobseeker";
 }
 
 export interface LoginResponse {

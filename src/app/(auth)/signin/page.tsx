@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useLogin } from "~/APIs/hooks/useAuth";
 import { toast } from "react-toastify";
 
-type Role = "admin" | "employer" | "candidate";
+type Role = "admin" | "employer" | "jobseeker";
 
 type FormErrorsType = {
   email?: string;
@@ -36,7 +36,7 @@ const roles = [
     icon: HiOutlineBriefcase,
   },
   {
-    id: "candidate",
+    id: "jobseeker",
     role: "Job Seeker",
     title: "Search and apply for jobs",
     icon: HiOutlineUser,
@@ -46,13 +46,13 @@ const roles = [
 const roleFormTitleMap: Record<Role, string> = {
   admin: "Admin",
   employer: "Employer",
-  candidate: "Job Seeker",
+  jobseeker: "Job Seeker",
 };
 
 const roleRedirectMap: Record<Role, string> = {
   admin: "/admin",
   employer: "/employer",
-  candidate: "/job-seeker",
+  jobseeker: "/job-seeker",
 };
 
 export default function Page() {
@@ -76,38 +76,44 @@ export default function Page() {
       }
     },
     onError: (error: any) => {
-      const backendMessage =
-        error?.response?.data?.message ||
-        error?.message ||
-        "Login failed";
+  const status = error?.response?.status;
+  const backendMessage = error?.response?.data?.message || "";
 
-      let message = "Login failed. Please try again.";
+  let message = "Login failed. Please try again.";
 
-      if (
-        backendMessage === "Invalid credentials" ||
-        backendMessage === "Unauthorized" ||
-        backendMessage === "Invalid email or password"
-      ) {
-        message = "Incorrect email or password.";
-        setErrors((prev) => ({
-          ...prev,
-          email: " ",
-          password: "Incorrect email or password",
-        }));
-      } else if (backendMessage === "User not found") {
-        message = "No account was found with this email.";
-        setErrors((prev) => ({
-          ...prev,
-          email: "No account was found with this email",
-        }));
-      } else if (backendMessage === "Too many requests") {
-        message = "Too many attempts. Please try again later.";
-      } else {
-        message = backendMessage;
-      }
+  if (
+    backendMessage === "Invalid credentials" ||
+    backendMessage === "Unauthorized" ||
+    backendMessage === "Invalid email or password"
+  ) {
+    message = "Incorrect email or password.";
+    setErrors((prev) => ({
+      ...prev,
+      email: " ",
+      password: "Incorrect email or password",
+    }));
+  } else if (
+    backendMessage === "Invalid role" ||
+    backendMessage.includes("not a") ||
+    backendMessage.toLowerCase().includes("role")
+  ) {
+    message = "Please choose the correct account type.";
+    setErrors((prev) => ({
+      ...prev,
+      role: "Please choose the correct account type.",
+    }));
+  } else if (backendMessage === "User not found") {
+    message = "No account was found with this email.";
+    setErrors((prev) => ({
+      ...prev,
+      email: "No account was found with this email",
+    }));
+  } else if (backendMessage === "Too many requests" || status === 429) {
+    message = "Too many attempts. Please try again later.";
+  }
 
-      toast.error(message);
-    },
+  toast.error(message);
+},
   });
 
   const validateForm = () => {
@@ -170,6 +176,7 @@ export default function Page() {
     mutate({
       email: formData.email.trim(),
       password: formData.password,
+      role: selected!,
     });
   };
 
@@ -195,31 +202,27 @@ export default function Page() {
               key={role.id}
               type="button"
               onClick={() => handleSelectRole(role.id as Role)}
-              className={`flex flex-col items-center justify-center rounded-[20px] border px-7 py-6 text-center shadow-sm transition-all duration-200 ${
-                active
+              className={`flex flex-col items-center justify-center rounded-[20px] border px-7 py-6 text-center shadow-sm transition-all duration-200 ${active
                   ? "border-2 border-blue-500 bg-blue-50/40 md:scale-[1.07]"
                   : "scale-100 border-slate-200 bg-white hover:border-blue-300 hover:shadow-md"
-              }`}
+                }`}
             >
               <div
-                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-all ${
-                  active ? "text-blue-600" : "text-slate-400"
-                }`}
+                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-xl transition-all ${active ? "text-blue-600" : "text-slate-400"
+                  }`}
               >
                 <Icon className="h-10 w-10" />
               </div>
 
               <p
-                className={`text-lg font-semibold ${
-                  active ? "text-blue-700" : "text-slate-800"
-                }`}
+                className={`text-lg font-semibold ${active ? "text-blue-700" : "text-slate-800"
+                  }`}
               >
                 {role.role}
               </p>
               <p
-                className={`text-base ${
-                  active ? "text-blue-700" : "text-slate-800"
-                }`}
+                className={`text-base ${active ? "text-blue-700" : "text-slate-800"
+                  }`}
               >
                 {role.title}
               </p>
