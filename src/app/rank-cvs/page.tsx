@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 const ENDPOINT =
-  "https://2b8f908598bd8355-197-54-216-39.serveousercontent.com/rank-cvs";
+  "https://jobai.sell-io.app/rank-cvs";
 
 type ApiResponse = {
   mode?: string;

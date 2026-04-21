@@ -9,6 +9,7 @@ import JobRowCard, { type JobRow } from "~/_components/job-seeker/JobRowCard";
 import JobsPagination from "~/_components/job-seeker/JobsPagination";
 import { JobseekerJobItem } from "~/APIs/features/jobSeeker";
 import { useJobseekerJobs } from "~/APIs/hooks/useJobSeeker";
+import { Skeleton } from "~/components/ui/skeleton";
 
 function formatSalary(min?: number, max?: number) {
   if (typeof min !== "number" && typeof max !== "number") return "Salary not specified";
@@ -261,11 +262,13 @@ export default function FindJobjs() {
       <section className="mb-10 w-full">
         <div className="mx-auto px-4 pb-6">
           <div className="mb-4 flex items-center justify-between gap-4">
-            <p className="text-sm text-slate-500">
-              {isLoading
-                ? "Loading jobs..."
-                : `Showing ${Math.min(start + pageJobs.length, filteredJobs.length)} of ${filteredJobs.length} jobs`}
-            </p>
+            {isLoading ? (
+              <Skeleton className="h-4 w-40" />
+            ) : (
+              <p className="text-sm text-slate-500">
+                {`Showing ${Math.min(start + pageJobs.length, filteredJobs.length)} of ${filteredJobs.length} jobs`}
+              </p>
+            )}
 
             <select
               value={sortBy}
@@ -280,8 +283,10 @@ export default function FindJobjs() {
           </div>
 
           {isLoading ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">
-              Loading jobs...
+            <div className="space-y-4">
+              {Array.from({ length: PAGE_SIZE }).map((_, index) => (
+                <JobRowCardSkeleton key={index} />
+              ))}
             </div>
           ) : error ? (
             <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-600 shadow-sm">
@@ -311,5 +316,37 @@ export default function FindJobjs() {
         </div>
       </section>
     </Container>
+  );
+}
+
+function JobRowCardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-1 gap-4">
+          <Skeleton className="h-14 w-14 rounded-xl" />
+
+          <div className="flex-1 space-y-3">
+            <Skeleton className="h-5 w-3/5" />
+            <Skeleton className="h-4 w-2/5" />
+
+            <div className="flex flex-wrap gap-2">
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-6 w-24 rounded-full" />
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-11/12" />
+          </div>
+        </div>
+
+        <div className="space-y-3 md:w-48">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-10 w-full rounded-xl" />
+        </div>
+      </div>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Container from "~/_components/global/Container";
 
 const ENDPOINT =
-    "https://2b8f908598bd8355-197-54-216-39.serveousercontent.com/match";
+    "https://jobai.sell-io.app/match";
 
 type ApiResponse = {
     mode?: string;
