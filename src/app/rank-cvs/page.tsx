@@ -19,13 +19,79 @@ type RankedCvItem = {
 
 export default function RankCvsPage() {
   const [jobDescription, setJobDescription] = useState(
-    "We are looking for a Senior Python Developer with experience in FastAPI, PostgreSQL, and deploying machine learning models on Linux servers. Knowledge of Docker is a plus."
+    `Senior Python Developer Role:
+
+We are looking for a Senior Python Developer to design and build scalable backend systems and services.
+
+Responsibilities:
+- Develop high-performance backend systems using Python (FastAPI, Django, Flask)
+- Design and build RESTful APIs for web applications
+- Work with PostgreSQL and optimize database performance
+- Deploy and maintain applications on Linux servers
+- Collaborate with data teams to deploy machine learning models
+- Containerize applications using Docker and manage deployments
+
+Requirements:
+- Strong experience in Python
+- Experience with FastAPI, Django, or Flask
+- PostgreSQL or similar relational databases
+- Linux server management
+- REST API development
+
+Preferred:
+- Docker and containerization
+- Experience with machine learning model deployment
+- Knowledge of cloud platforms (AWS, GCP)
+- Understanding of microservices architecture`
   );
 
   const [cvList, setCvList] = useState<string[]>([
-    "I am a Junior Web Developer specializing in HTML, CSS, and JavaScript. I have built a simple portfolio website and enjoy learning new frontend frameworks.",
-    "Expert Backend Engineer with 5 years of experience in Python. Proficient in building REST APIs using FastAPI and Flask. Strong knowledge of PostgreSQL and Linux environment.",
-    "Mechanical Engineer with a background in CAD design and thermal systems. Seeking a role in manufacturing or automotive industries.",
+    `Junior Frontend Developer:
+
+Skills:
+- HTML, CSS, JavaScript
+- Basic React.js
+
+Experience:
+- Built a personal portfolio website
+- Practicing responsive design and UI development
+
+Goals:
+- Learning modern frontend frameworks
+- Interested in improving UI/UX skills`,
+
+    `Senior Backend Engineer:
+
+Technical Skills:
+- Python (5+ years)
+- Frameworks: FastAPI, Flask, Django
+- Databases: PostgreSQL
+- Tools: Git, Linux, Docker
+
+Experience:
+- Built scalable REST APIs using FastAPI and Flask
+- Designed backend systems handling high traffic
+- Optimized PostgreSQL queries and database performance
+- Deployed applications on Linux servers
+- Worked with Docker for containerization
+
+Projects:
+- API platform for SaaS product
+- Microservices-based backend system`,
+
+    `Mechanical Engineer:
+
+Skills:
+- CAD Design (AutoCAD, SolidWorks)
+- Thermal systems analysis
+- Manufacturing processes
+
+Experience:
+- Designed mechanical components for industrial systems
+- Worked on heat transfer and thermal efficiency projects
+
+Goals:
+- Seeking opportunities in manufacturing or automotive industries`
   ]);
 
   const [loading, setLoading] = useState(false);
@@ -102,8 +168,7 @@ export default function RankCvsPage() {
       if (!response.ok) {
         const text = await response.text();
         throw new Error(
-          `Request failed: ${response.status} ${response.statusText}${
-            text ? ` - ${text}` : ""
+          `Request failed: ${response.status} ${response.statusText}${text ? ` - ${text}` : ""
           }`
         );
       }
@@ -231,11 +296,10 @@ export default function RankCvsPage() {
                   {rankedResults.map((item, index) => (
                     <div
                       key={`${item.originalIndex}-${index}`}
-                      className={`rounded-2xl border p-5 shadow-sm ${
-                        index === 0
+                      className={`rounded-2xl border p-5 shadow-sm ${index === 0
                           ? "bg-green-50 border-green-300"
                           : "bg-white border-gray-200"
-                      }`}
+                        }`}
                     >
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                         <div>

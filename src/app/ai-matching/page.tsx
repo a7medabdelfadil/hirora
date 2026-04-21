@@ -20,15 +20,139 @@ type RankedJobItem = {
 
 export default function MatchPage() {
     const [cvText, setCvText] = useState(
-        "I am a Senior Backend Developer specializing in Python, FastAPI, and PostgreSQL. I have extensive experience with Microservices architecture, Docker, and Kubernetes. I also work with Redis for caching and RabbitMQ for messaging."
+        `I am a Senior Backend Developer with 5+ years of experience building scalable and high-performance systems.
+
+Technical Skills:
+- Programming Languages: Python (Expert)
+- Frameworks: FastAPI, Django
+- Databases: PostgreSQL, MongoDB
+- Architecture: Microservices, RESTful APIs
+- DevOps & Cloud: Docker, Kubernetes, CI/CD, AWS (EC2, S3)
+- Messaging & Caching: Redis, RabbitMQ
+- Tools: Git, GitHub, Linux, Nginx
+
+Experience:
+- Designed and developed scalable backend systems using FastAPI and Django
+- Built microservices architecture handling high traffic applications
+- Optimized PostgreSQL queries, improving performance by up to 40%
+- Implemented caching strategies using Redis
+- Integrated messaging queues using RabbitMQ
+- Deployed applications using Docker and Kubernetes on AWS
+- Built and maintained CI/CD pipelines for automated deployments
+
+Projects:
+- E-commerce Backend System (FastAPI + PostgreSQL + Redis)
+- Real-time Notification Service using RabbitMQ
+- Scalable SaaS platform with microservices architecture
+
+Soft Skills:
+- Problem solving
+- System design thinking
+- Team collaboration
+- Agile/Scrum experience
+
+Education:
+- BSc in Computer Science`
     );
 
     const [jobDescriptions, setJobDescriptions] = useState<string[]>([
-        "Seeking a Backend Engineer: Expertise in Python/Django, database optimization, and cloud infrastructure (AWS/Azure).",
-        "Frontend Developer position: Required skills in React.js, Tailwind CSS, and TypeScript. Must have an eye for UI/UX design.",
-        "DevOps Engineer: Focus on CI/CD pipelines, Terraform, and managing Kubernetes clusters in production.",
-        "Data Scientist: Looking for someone with experience in Machine Learning, Pandas, and Scikit-learn to build predictive models.",
-        "Administrative Assistant: Handling office schedules and answering phone calls.",
+        `Backend Engineer Role:
+We are looking for a Backend Engineer with strong experience in Python frameworks such as Django or FastAPI.
+
+Responsibilities:
+- Design and develop scalable backend services
+- Optimize database queries and performance
+- Work with cloud platforms like AWS or Azure
+- Build and maintain RESTful APIs
+
+Requirements:
+- Python (Django or FastAPI)
+- PostgreSQL or similar databases
+- Experience with cloud infrastructure
+- Understanding of microservices architecture
+
+Preferred:
+- Docker, Kubernetes
+- Messaging systems like RabbitMQ
+- Caching tools like Redis`,
+
+        `Frontend Developer Position:
+Seeking a Frontend Developer to build modern and responsive user interfaces.
+
+Responsibilities:
+- Develop UI using React.js and Tailwind CSS
+- Write clean and maintainable TypeScript code
+- Collaborate with designers to implement UI/UX
+- Integrate APIs and manage frontend state
+
+Requirements:
+- React.js
+- Tailwind CSS
+- TypeScript
+- API integration
+
+Preferred:
+- Next.js
+- Performance optimization
+- UI/UX design experience`,
+
+        `DevOps Engineer:
+Looking for a DevOps Engineer to manage infrastructure and deployment pipelines.
+
+Responsibilities:
+- Build and maintain CI/CD pipelines
+- Manage Kubernetes clusters in production
+- Use Terraform for infrastructure as code
+- Monitor system performance and reliability
+
+Requirements:
+- CI/CD tools (GitHub Actions, Jenkins)
+- Kubernetes
+- Terraform
+- Cloud platforms (AWS, GCP, or Azure)
+
+Preferred:
+- Docker
+- Logging & monitoring tools
+- Security best practices`,
+
+        `Data Scientist Role:
+We are hiring a Data Scientist to analyze data and build predictive models.
+
+Responsibilities:
+- Analyze large datasets
+- Build machine learning models
+- Use Python libraries for data processing
+- Communicate insights to stakeholders
+
+Requirements:
+- Python
+- Pandas, NumPy
+- Scikit-learn
+- Data visualization
+
+Preferred:
+- Deep learning frameworks
+- SQL knowledge
+- Experience with real-world datasets`,
+
+        `Administrative Assistant:
+We are looking for an Administrative Assistant to support daily office operations.
+
+Responsibilities:
+- Manage schedules and appointments
+- Handle phone calls and emails
+- Organize files and documents
+- Assist with administrative tasks
+
+Requirements:
+- Good communication skills
+- Basic computer skills
+- Organization and time management
+
+Preferred:
+- Experience in office environments
+- Familiarity with Microsoft Office tools`
     ]);
 
     const [loading, setLoading] = useState(false);
@@ -235,8 +359,8 @@ export default function MatchPage() {
                                             <div
                                                 key={`${item.originalIndex}-${index}`}
                                                 className={`rounded-2xl border p-5 shadow-sm ${index === 0
-                                                        ? "bg-green-50 border-green-300"
-                                                        : "bg-white border-gray-200"
+                                                    ? "bg-green-50 border-green-300"
+                                                    : "bg-white border-gray-200"
                                                     }`}
                                             >
                                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
