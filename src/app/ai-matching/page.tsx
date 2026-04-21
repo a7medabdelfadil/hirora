@@ -259,9 +259,6 @@ Preferred:
                         <h1 className="text-2xl md:text-3xl font-bold mb-2">
                             CV / Job Matching
                         </h1>
-                        <p className="text-gray-600 mb-8">
-                            أدخل نص الـ CV وأضف أي عدد من الـ job descriptions ثم اضغط Match.
-                        </p>
 
                         <div className="space-y-6">
                             <div>
