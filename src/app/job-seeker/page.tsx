@@ -11,10 +11,23 @@ import {
 } from "react-icons/hi2";
 import Container from "~/_components/global/Container";
 import JobCard, { type Job } from "~/_components/job-seeker/JobCard";
+import { useAuthMe } from "~/APIs/hooks/useAuth";
 import { useJobseekerApplicationsStats } from "~/APIs/hooks/useJobSeeker";
 
 function JobSeekerPage() {
   const { data: statsData } = useJobseekerApplicationsStats();
+    const { data: user, isLoading: isUserLoading } = useAuthMe();
+    const getInitials = (name?: string) => {
+      return (
+        name
+          ?.split(" ")
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((p) => p[0]?.toUpperCase())
+          .join("") || "NA"
+      );
+    };
+
   const stats = [
     {
       title: "Jobs Applied",
@@ -129,7 +142,7 @@ function JobSeekerPage() {
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-semibold text-slate-900">
-              Welcome back, John Doe!
+              Welcome back, {user?.name || "Job Seeker"}!
             </h1>
             <p className="mt-1 text-sm text-slate-500">
               Find your dream job today
