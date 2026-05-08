@@ -23,15 +23,23 @@ export interface LoginResponse {
   };
 }
 
-export const signUp = async (
-  formData: SignUpFormData,
-): Promise<SignUpFormData> => {
-  const response = await axiosInstance.post<SignUpFormData>(
-    "/api/auth/register",
-    formData,
-  );
+export const signUp = async (formData: any): Promise<any> => {
+  if (formData.role === "jobseeker" && formData.cv) {
+    const fd = new FormData();
+    fd.append("name", formData.name);
+    fd.append("email", formData.email);
+    fd.append("password", formData.password);
+    fd.append("role", formData.role);
+    fd.append("cv", formData.cv);
 
-  return response.data;
+    const response = await axiosInstance.post("/api/auth/register", fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  } else {
+    const response = await axiosInstance.post("/api/auth/register", formData);
+    return response.data;
+  }
 };
 
 export const login = async (

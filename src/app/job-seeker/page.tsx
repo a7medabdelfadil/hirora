@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FiClock } from "react-icons/fi";
 import { HiOutlineTrendingUp } from "react-icons/hi";
 import {
@@ -10,23 +10,176 @@ import {
   HiOutlineDocumentText,
 } from "react-icons/hi2";
 import Container from "~/_components/global/Container";
-import JobCard, { type Job } from "~/_components/job-seeker/JobCard";
+import JobCard from "~/_components/job-seeker/JobCard";
 import { useAuthMe } from "~/APIs/hooks/useAuth";
-import { useJobseekerApplicationsStats } from "~/APIs/hooks/useJobSeeker";
+import {
+  useJobseekerApplicationsStats,
+  useJobseekerJobs,
+} from "~/APIs/hooks/useJobSeeker";
 
-function JobSeekerPage() {
+// AI endpoint to get matches
+const AI_MATCH_ENDPOINT = "https://jobai.sell-io.app/match";
+// Base URL to download CV
+const BASE_URL = "https://hire-hub-backend-24125c11c709.herokuapp.com";
+
+export default function JobSeekerPage() {
+  // App state
   const { data: statsData } = useJobseekerApplicationsStats();
-    const { data: user, isLoading: isUserLoading } = useAuthMe();
-    const getInitials = (name?: string) => {
-      return (
-        name
-          ?.split(" ")
-          .filter(Boolean)
-          .slice(0, 2)
-          .map((p) => p[0]?.toUpperCase())
-          .join("") || "NA"
-      );
+  const { data: user } = useAuthMe();
+  const {
+    data: jobsData,
+    isLoading: jobsLoading,
+    error: jobsError,
+  } = useJobseekerJobs();
+
+  // Matching state
+  const [cvText, setCvText] = useState<string>("");
+  const [cvLoading, setCvLoading] = useState(false);
+  const [cvError, setCvError] = useState<string>("");
+  const [aiMatches, setAiMatches] = useState<
+    { job: any; score: number; percentage: number }[]
+  >([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string>("");
+
+  // Step 1: Fetch, download and extract CV text if jobseeker and has a resume
+  useEffect(() => {
+    const extractTextFromPdf = async (file: File) => {
+      try {
+        const pdfjsLib = await import("pdfjs-dist");
+        pdfjsLib.GlobalWorkerOptions.workerSrc = "/pdf.worker.min.mjs";
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = "";
+        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+          const page = await pdf.getPage(pageNumber);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items
+            .map((item: any) => ("str" in item ? item.str : ""))
+            .join(" ");
+          fullText += `\n ${pageText}`;
+        }
+        return fullText.trim();
+      } catch (err) {
+        throw new Error(
+          "Failed to read the PDF. Make sure your CV is a real text-based PDF."
+        );
+      }
     };
+
+    const fetchAndExtract = async () => {
+      setCvError("");
+      setCvText("");
+      if (
+        user &&
+        user.role === "jobseeker" &&
+        user.profile &&
+        user.profile.resume
+      ) {
+        setCvLoading(true);
+        try {
+          const resumePath = user.profile.resume;
+          const url = resumePath.startsWith("/")
+            ? `${BASE_URL}${resumePath}`
+            : resumePath;
+          const response = await fetch(url);
+          if (!response.ok) throw new Error("CV download failed");
+          const blob = await response.blob();
+          const file = new File(
+            [blob],
+            resumePath.split("/").pop() || "CV.pdf",
+            {
+              type: "application/pdf",
+            }
+          );
+          const text = await extractTextFromPdf(file);
+          setCvText(text);
+        } catch (err: any) {
+          setCvError(
+            err instanceof Error ? err.message : "Couldn't load the CV file."
+          );
+        } finally {
+          setCvLoading(false);
+        }
+      }
+    };
+
+    fetchAndExtract();
+    // eslint-disable-next-line
+  }, [user]);
+
+  // Step 2: When (cvText, jobsData) are ready, call AI endpoint to rank jobs
+  useEffect(() => {
+    if (
+      !cvText ||
+      !jobsData ||
+      jobsData.length === 0 ||
+      cvLoading ||
+      jobsLoading
+    ) {
+      setAiMatches([]);
+      return;
+    }
+
+    const getMatches = async () => {
+      setAiMatches([]);
+      setAiError("");
+      setAiLoading(true);
+
+      try {
+        // Prepare jobs data as job_descriptions for the AI endpoint
+        const jobDescriptions = jobsData.map((job) => {
+          return [
+            job.title,
+            job.description,
+            ...(job.requirements || []),
+            ...(job.responsibilities || []),
+          ]
+            .filter(Boolean)
+            .join("\n");
+        });
+
+        // Send to AI endpoint
+        const resp = await fetch(AI_MATCH_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cv_text: cvText,
+            job_descriptions: jobDescriptions,
+          }),
+        });
+
+        if (!resp.ok) {
+          throw new Error("Couldn't get recommended jobs from AI");
+        }
+
+        const data = await resp.json();
+        // data.scores = array of floats matching jobsData
+        const scoresArr: number[] = Array.isArray(data.scores)
+          ? data.scores
+          : [];
+        // Merge jobs & ranking, keep the index, and sort descending
+        const ranked = jobsData.map((job, idx) => ({
+          job,
+          score: scoresArr[idx] ?? 0,
+          percentage: Number(((scoresArr[idx] ?? 0) * 100).toFixed(2)),
+        }));
+        ranked.sort((a, b) => b.score - a.score);
+        setAiMatches(ranked.slice(0, 6));
+      } catch (err: any) {
+        setAiMatches([]);
+        setAiError(
+          err instanceof Error
+            ? err.message
+            : "Something went wrong, couldn't match jobs."
+        );
+      } finally {
+        setAiLoading(false);
+      }
+    };
+
+    getMatches();
+  }, [cvText, jobsData, cvLoading, jobsLoading]);
 
   const stats = [
     {
@@ -64,74 +217,6 @@ function JobSeekerPage() {
       value: statsData?.pending ?? 0,
       iconBg: "bg-yellow-500",
       Icon: FiClock,
-    },
-  ];
-  const jobs: Job[] = [
-    {
-      id: "1",
-      title: "Senior Full Stack Developer",
-      company: "TechCorp Solutions",
-      location: "San Francisco, CA",
-      salary: "$120,000 - $160,000",
-      typeTag: "Full-time",
-      categoryTag: "Engineering",
-      logoUrl:
-        "/images/job-profile.png",
-    },
-    {
-      id: "2",
-      title: "Product Manager",
-      company: "TechCorp Solutions",
-      location: "San Francisco, CA",
-      salary: "$130,000 - $170,000",
-      typeTag: "Full-time",
-      categoryTag: "Product",
-      logoUrl:
-        "/images/job-profile.png",
-    },
-    {
-      id: "3",
-      title: "Financial Analyst",
-      company: "FinanceHub Inc",
-      location: "New York, NY",
-      salary: "$90,000 - $120,000",
-      typeTag: "Full-time",
-      categoryTag: "Finance",
-      logoUrl:
-        "/images/job-profile.png",
-    },
-    {
-      id: "4",
-      title: "UX/UI Designer",
-      company: "TechCorp Solutions",
-      location: "Remote",
-      salary: "$100,000 - $140,000",
-      typeTag: "Full-time",
-      categoryTag: "Design",
-      logoUrl:
-        "/images/job-profile.png",
-    },
-    {
-      id: "5",
-      title: "Registered Nurse",
-      company: "HealthCare Plus",
-      location: "Boston, MA",
-      salary: "$75,000 - $95,000",
-      typeTag: "Full-time",
-      categoryTag: "Healthcare",
-      logoUrl:
-        "/images/job-profile.png",
-    },
-    {
-      id: "6",
-      title: "Marketing Coordinator",
-      company: "EduLearn Academy",
-      location: "Austin, TX",
-      salary: "$55,000 - $70,000",
-      typeTag: "Full-time",
-      categoryTag: "Marketing",
-      logoUrl:
-        "/images/job-profile.png",
     },
   ];
 
@@ -196,30 +281,88 @@ function JobSeekerPage() {
           </div>
         </div>
       </section>
-      <section className="w-full">
-        <div className="mx-auto px-4 py-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-slate-900">
-              Recommended Jobs
-            </h2>
+     <section className="w-full">
+ <div className="mx-auto px-4 py-6">
+  {/* Header */}
+  <div className="mb-6 flex items-center justify-between">
+    <h2 className="text-xl font-bold text-slate-900">
+      Recommended Jobs
+    </h2>
 
-            <Link
-              href="/job-seeker/find-jobs"
-              className="text-sm font-medium text-purple-700 hover:text-purple-800 hover:underline"
-            >
-              View All
-            </Link>
+    <Link
+      href="/job-seeker/find-jobs"
+      className="text-sm font-semibold text-purple-700 transition hover:text-purple-900 hover:underline"
+    >
+      View All
+    </Link>
+  </div>
+
+  {/* Grid */}
+  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+    {/* Loading / Errors */}
+    {cvLoading || jobsLoading || aiLoading ? (
+      <div className="col-span-3 rounded-2xl border border-slate-200 bg-white py-10 text-center text-slate-400 shadow-sm">
+        Matching to your CV...
+      </div>
+    ) : cvError ? (
+      <div className="col-span-3 rounded-2xl border border-red-200 bg-red-50 py-10 text-center text-red-500">
+        {cvError}
+      </div>
+    ) : aiError ? (
+      <div className="col-span-3 rounded-2xl border border-red-200 bg-red-50 py-10 text-center text-red-500">
+        {aiError}
+      </div>
+    ) : aiMatches.length === 0 ? (
+      <div className="col-span-3 rounded-2xl border border-slate-200 bg-white py-10 text-center text-slate-500 shadow-sm">
+        No recommended jobs yet.
+      </div>
+    ) : (
+      aiMatches.map((item, idx) => (
+        <div
+          key={item.job._id}
+          className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+        >
+          {/* Top badges row */}
+          <div className="mb-3 flex items-center justify-between">
+            {/* Best Match */}
+            {idx === 0 ? (
+              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                ⭐ Best Match
+              </span>
+            ) : (
+              <div />
+            )}
+
+            {/* Match Percentage */}
+            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+              {item.percentage}% Match
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {jobs.map((job) => (
-              <JobCard key={job.id} job={job} />
-            ))}
-          </div>
+          {/* Job Card */}
+          <JobCard
+            job={{
+              id: item.job._id,
+              title: item.job.title,
+              company:
+                item.job.company?.name ?? "Unknown Company",
+              location: item.job.location,
+              salary:
+                item.job.salaryMin &&
+                item.job.salaryMax
+                  ? `$${item.job.salaryMin.toLocaleString()} - $${item.job.salaryMax.toLocaleString()}`
+                  : "Not specified",
+              typeTag: item.job.type,
+              categoryTag: item.job.category,
+              logoUrl: "/images/job-profile.png",
+            }}
+          />
         </div>
-      </section>
+      ))
+    )}
+  </div>
+</div>
+</section>
     </Container>
   );
 }
-
-export default JobSeekerPage;

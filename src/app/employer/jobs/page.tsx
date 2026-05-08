@@ -251,7 +251,7 @@ function JobPostingPage() {
               <button
                 type="button"
                 onClick={openCreateDialog}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-green-600 px-5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500/30"
+                className="w-44 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-green-600 px-5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500/30"
               >
                 <Plus className="h-5 w-5" />
                 Create New Job

@@ -28,11 +28,12 @@ type FormErrorsType = {
 export default function SignupPage() {
   const router = useRouter();
 
-  const [formData, setFormData] = useState<FormDataType>({
+  const [formData, setFormData] = useState<FormDataType & { cv?: File | null }>({
     name: "",
     email: "",
     password: "",
-    role: "admin",
+    role: "admin", // default
+    cv: null,
   });
 
   const [errors, setErrors] = useState<FormErrorsType>({});
@@ -103,13 +104,11 @@ export default function SignupPage() {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
-    const { name, value } = e.target;
-
+    const { name, value, type, files } = e.target as HTMLInputElement;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "file" ? (files ? files[0] : null) : value,
     }));
-
     setErrors((prev) => ({
       ...prev,
       [name]: "",
@@ -125,12 +124,16 @@ export default function SignupPage() {
       return;
     }
 
-    mutate({
-      name: formData.name.trim(),
-      email: formData.email.trim(),
-      password: formData.password,
-      role: formData.role,
-    });
+    if (formData.role === "jobseeker" && !formData.cv) {
+      setErrors((prev) => ({
+        ...prev,
+        cv: "CV is required for jobseekers",
+      }));
+      toast.error("Please upload your CV");
+      return;
+    }
+
+    mutate(formData as any);
   };
 
   return (
@@ -214,6 +217,20 @@ export default function SignupPage() {
               <p className="mt-1 text-sm text-red-500">{errors.role}</p>
             )}
           </div>
+          {
+            formData.role === "jobseeker" && (
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-700">CV (PDF)</label>
+                <input
+                  type="file"
+                  name="cv"
+                  accept="application/pdf"
+                  onChange={handleChange}
+                  className="block w-full text-sm text-slate-600"
+                />
+              </div>
+            )
+          }
 
           <Button
             as="button"

@@ -57,7 +57,8 @@ export interface ApplyToJobPayload {
   phone: string;
   experience: number;
   coverLetter: string;
-  resume: string;
+  skills?: string;
+  cv?: File; 
 }
 
 export interface ApplyToJobResponse {
@@ -140,11 +141,27 @@ export const applyToJob = async ({
   jobId: string;
   payload: ApplyToJobPayload;
 }): Promise<ApplyToJobResponse> => {
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+  let dataToSend: FormData | unknown = payload;
+  const config: any = {};
+
+  if (payload.cv) {
+    const fd = new FormData();
+    fd.append("phone", payload.phone);
+    fd.append("experience", payload.experience.toString());
+    fd.append("coverLetter", payload.coverLetter);
+    if (payload.skills) fd.append("skills", payload.skills);
+    fd.append("cv", payload.cv);
+
+    dataToSend = fd;
+    config.headers = { "Content-Type": "multipart/form-data" };
+  }
+
   const response = await axiosInstance.post<ApplyToJobResponse>(
     `/api/jobseeker/jobs/${jobId}/apply`,
-    payload,
+    dataToSend,
+    config
   );
-
   return response.data;
 };
 
