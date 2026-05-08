@@ -3,7 +3,7 @@
 "use client";
 
 import { Briefcase, Clock3, Plus, TrendingUp, Users } from "lucide-react";
-import React from "react";
+import React, { useEffect } from "react";
 import JobPerformanceChart from "~/_components/employer/JobPerformanceChart";
 import RecentApplicantsTable from "~/_components/employer/RecentApplicantsTable";
 import Container from "~/_components/global/Container";
@@ -23,6 +23,7 @@ import {
 import { toast } from "react-toastify";
 import { link } from "fs";
 import { useRouter } from "next/navigation";
+import Spinner from "~/_components/global/Spinner";
 
 type JobFormData = {
   title: string;
@@ -170,7 +171,21 @@ function EmployerPage() {
   };
 
   const router = useRouter();
-
+  useEffect(() => {
+    if (!isLoading && (!dashboard?.company?.name || isError)) {
+      router.replace("/employer/no-company");
+    }
+  }, [isLoading, isError, dashboard, router]);
+if (isLoading) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
+        <Spinner /> 
+      </div>
+    );
+  }
+  if (isLoading || isError || !dashboard?.company?.name) {
+    return null;
+  }
   type ActionItem = {
     label: string;
     variant: "primary" | "outline";
@@ -265,21 +280,20 @@ function EmployerPage() {
           </section>
         </div>
       ) : isError ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm">
-          <p className="text-sm font-medium text-red-700">
-            Failed to load employer dashboard.
+        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-8 shadow-sm flex flex-col items-center justify-center">
+          <div className="mb-3 flex items-center justify-center">
+            <svg className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" strokeWidth="2" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-bold text-yellow-900 mb-2">Company Assignment Required</h2>
+          <p className="text-md text-yellow-800 mb-1">
+            You have not been assigned to a company yet.
           </p>
-          <p className="mt-1 text-sm text-red-600">
-            {error instanceof Error ? error.message : "Something went wrong."}
+          <p className="text-md text-yellow-800">
+            Please contact your administrator to add you to a company before using your dashboard.
           </p>
-
-          <button
-            type="button"
-            onClick={() => refetch()}
-            className="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-red-600 px-4 text-sm font-medium text-white transition hover:bg-red-700"
-          >
-            Retry
-          </button>
         </div>
       ) : (
         <>

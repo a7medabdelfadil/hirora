@@ -22,6 +22,7 @@ import {
 import { HiOutlineUserGroup } from "react-icons/hi";
 import Cookies from "js-cookie";
 import { useAuthMe } from "~/APIs/hooks/useAuth";
+import { useEmployerDashboard } from "~/APIs/hooks/useEmployer";
 
 // ---------- ROLE HELPERS ----------
 
@@ -270,6 +271,9 @@ const NavBar = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+    const { data: dashboard } = useEmployerDashboard();
+
 
   if (!isClient)
     return (
