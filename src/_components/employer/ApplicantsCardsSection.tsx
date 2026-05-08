@@ -128,7 +128,7 @@ export default function ApplicantsCardsSection({
 
   return (
     <section className="w-full">
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4">
         {applications.map((application) => {
           const skills =
             application.applicant?.profile?.skills?.length
