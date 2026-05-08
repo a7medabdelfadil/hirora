@@ -152,8 +152,8 @@ export default function CvToTextPage() {
                   Choose the CV file, and the page will extract the readable text from all pages.
                 </p>
 
-                {/* إظهار اختيار الرفع فقط إذا مفيش CV في البروفايل */}
-                {!user?.profile?.resume && (
+                {/* إظهار اختيار الرفع فقط إذا مفيش CV في البروفايل وكل ده تحت شرط الـ role */}
+                {user?.role === "jobseeker" && !user.profile?.resume && (
                   <label className="mt-6 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-white px-6 py-10 text-center transition hover:border-slate-500 hover:bg-slate-50">
                     <div className="mb-4 rounded-full bg-slate-100 p-4">
                       <svg
@@ -188,7 +188,7 @@ export default function CvToTextPage() {
                 )}
 
                 {/* لو فيه CV حالي في البروفايل */}
-                {user?.profile?.resume && (
+                {user?.role === "jobseeker" && user.profile?.resume && (
                   <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
                     <p className="text-xs text-slate-700 font-medium">
                       Your CV has been loaded automatically from your profile.
