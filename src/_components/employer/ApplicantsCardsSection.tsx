@@ -10,6 +10,9 @@ import type {
 } from "~/APIs/features/employer";
 import { useUpdateEmployerApplicationStatus } from "~/APIs/hooks/useEmployer";
 
+// ضيف الـ BASE_URL هنا
+const BASE_URL = "https://hire-hub-backend-24125c11c709.herokuapp.com";
+
 type Status =
   | "pending"
   | "reviewing"
@@ -103,9 +106,14 @@ export default function ApplicantsCardsSection({
     });
   };
 
+  // تعديل هنا فقط مع دعم BASE_URL للرابط النسبي
   const onDownload = (resumeUrl?: string) => {
     if (!resumeUrl) return;
-    window.open(resumeUrl, "_blank", "noopener,noreferrer");
+    const url =
+      resumeUrl.startsWith("/")
+        ? `${BASE_URL}${resumeUrl}`
+        : resumeUrl;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   if (!applications.length) {
@@ -230,16 +238,6 @@ export default function ApplicantsCardsSection({
                     </button>
                   }
                 />
-
-                <button
-                  type="button"
-                  onClick={() => onDownload(application.applicantDetails?.resume)}
-                  className="inline-flex h-11 w-12 items-center justify-center rounded-xl border border-gray-300 bg-white text-gray-900 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  aria-label="Download"
-                  title="Download"
-                >
-                  <Download className="h-4 w-4" />
-                </button>
               </div>
             </div>
           );

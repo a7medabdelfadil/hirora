@@ -296,8 +296,8 @@ Goals:
                       <div
                         key={`${item.originalIndex}-${index}`}
                         className={`rounded-2xl border p-5 shadow-sm ${index === 0
-                            ? "bg-green-50 border-green-300"
-                            : "bg-white border-gray-200"
+                          ? "bg-green-50 border-green-300"
+                          : "bg-white border-gray-200"
                           }`}
                       >
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">

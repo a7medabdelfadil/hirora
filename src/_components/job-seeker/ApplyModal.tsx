@@ -29,8 +29,9 @@ export default function ApplyJobModal({
 
   const [phone, setPhone] = React.useState("");
   const [experience, setExperience] = React.useState("");
-  const [resume, setResume] = React.useState("");
   const [coverLetter, setCoverLetter] = React.useState("");
+  const [cv, setCv] = React.useState<File | null>(null);
+  const [cvError, setCvError] = React.useState("");
 
   const { mutate, isPending } = useApplyToJob({
     onSuccess: (data) => {
@@ -39,8 +40,9 @@ export default function ApplyJobModal({
       setOpen(false);
       setPhone("");
       setExperience("");
-      setResume("");
       setCoverLetter("");
+      setCv(null);
+      setCvError("");
     },
     onError: (error: any) => {
       const errorMessage =
@@ -53,8 +55,29 @@ export default function ApplyJobModal({
     },
   });
 
+  const handleCvChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setCv(null);
+      setCvError("CV (PDF) is required.");
+      return;
+    }
+    if (file.type !== "application/pdf") {
+      setCv(null);
+      setCvError("Only PDF files are allowed.");
+      return;
+    }
+    setCv(file);
+    setCvError("");
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!cv) {
+      setCvError("CV (PDF) is required.");
+      return;
+    }
 
     mutate({
       jobId,
@@ -62,7 +85,8 @@ export default function ApplyJobModal({
         phone,
         experience: Number(experience),
         coverLetter,
-        resume,
+        cv,
+        // يمكنك إضافة skills لو احتجت لاحقا
       },
     });
   };
@@ -124,16 +148,23 @@ export default function ApplyJobModal({
 
             <div>
               <label className="mb-2 block text-sm text-slate-700">
-                Resume URL <span className="text-red-500">*</span>
+                Upload CV (PDF) <span className="text-red-500">*</span>
               </label>
               <input
+                type="file"
+                accept="application/pdf"
                 required
-                type="url"
-                value={resume}
-                onChange={(e) => setResume(e.target.value)}
-                placeholder="https://example.com/resume.pdf"
+                onChange={handleCvChange}
                 className="h-11 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none transition focus:border-purple-400 focus:ring-2 focus:ring-purple-100"
               />
+              {cvError && (
+                <p className="mt-1 text-xs text-red-500">{cvError}</p>
+              )}
+              {cv && (
+                <p className="mt-1 text-xs text-slate-500">
+                  Selected file: {cv.name}
+                </p>
+              )}
             </div>
 
             <div>
