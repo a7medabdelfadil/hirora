@@ -4,7 +4,6 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GeistSans } from "geist/font/sans";
-import "react-toastify/dist/ReactToastify.css";
 import { TRPCReactProvider } from "~/trpc/react";
 import { usePathname } from "next/navigation";
 import ThemeProvider from "./providers/themeProvider";
@@ -17,7 +16,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
   const [queryClient] = useState(() => new QueryClient());
-  const isLoginPage = pathname === "/signin" || pathname === "/signup";
+  const isLoginPage = pathname === "/signin" || pathname === "/signup" || pathname === "/employer/no-company";
   const { language } = useLanguageStore() as {
     language: string;
   };
