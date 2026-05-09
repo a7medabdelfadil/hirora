@@ -99,9 +99,8 @@ function JobPostingPage() {
     }
   };
 
-  // إجراء التصنيف وإعطاء score لكل متقدم
+  // 1️⃣ عند تغيّر الداتا أو التحميل، فضِ البيانات فقط (بدون إعادة التصنيف)
   useEffect(() => {
-    // الشروط: لازم بيانات الوظيفة والتطبيقات يكونوا اتحملوا، وكذلك مفيش loading/errors
     if (
       !jobId ||
       isLoading ||
@@ -112,8 +111,29 @@ function JobPostingPage() {
       applications.length === 0
     ) {
       setRankedApplications([]);
-      setAiLoading(false);
-      setAiError("");
+    }
+    // eslint-disable-next-line
+  }, [
+    jobId,
+    jobData,
+    applications,
+    isLoading,
+    isLoadingJobs,
+    isError,
+    isErrorJobs,
+  ]);
+
+  // 2️⃣ عند وجود كل الداتا، نفّذ التصنيف (فقط لو كل شيء جاهز)
+  useEffect(() => {
+    if (
+      !jobId ||
+      isLoading ||
+      isLoadingJobs ||
+      isError ||
+      isErrorJobs ||
+      !jobData ||
+      applications.length === 0
+    ) {
       return;
     }
 
@@ -193,7 +213,15 @@ function JobPostingPage() {
 
     rankApplicants();
     // eslint-disable-next-line
-  }, [jobId, jobData, applications, isLoading, isLoadingJobs, isError, isErrorJobs]);
+  }, [
+    jobId,
+    jobData,
+    applications,
+    isLoading,
+    isLoadingJobs,
+    isError,
+    isErrorJobs,
+  ]);
 
   // المتغير الذي سنمرره ليعرض الترتيب الصحيح:
   const appsToDisplay = rankedApplications.length ? rankedApplications : filteredApplications;
@@ -272,7 +300,6 @@ function JobPostingPage() {
                 <div className="my-6 h-px w-full bg-gray-200/70" />
                 <div className="flex items-center gap-3">
                   <Skeleton className="h-11 flex-1 rounded-xl" />
-                  <Skeleton className="h-11 w-12 rounded-xl" />
                 </div>
               </div>
             ))}
@@ -299,43 +326,43 @@ function JobPostingPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-  {appsToDisplay.map((application, idx) => (
-    <div
-      key={application._id}
-      className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-    >
-      {/* Top Row */}
-      <div className="mb-4 flex items-center justify-between">
-        {/* Best Match */}
-        {idx === 0 &&
-        typeof application.ai_percentage === "number" ? (
-          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-            ⭐ Best Match
-          </span>
-        ) : (
-          <div />
-        )}
+            {appsToDisplay.map((application, idx) => (
+              <div
+                key={application._id}
+                className="group overflow-hidden rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+              >
+                {/* Top Row */}
+                <div className="mb-4 flex items-center justify-between">
+                  {/* Best Match */}
+                  {idx === 0 &&
+                    typeof application.ai_percentage === "number" ? (
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                      ⭐ Best Match
+                    </span>
+                  ) : (
+                    <div />
+                  )}
 
-        {/* Match Percentage */}
-        {typeof application.ai_percentage === "number" && (
-          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-            {application.ai_percentage}% Match
-          </span>
-        )}
-      </div>
+                  {/* Match Percentage */}
+                  {typeof application.ai_percentage === "number" && (
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                      {application.ai_percentage}% Match
+                    </span>
+                  )}
+                </div>
 
-      {/* Applicant Card */}
-      <ApplicantsCardsSection applications={[application]} />
-    </div>
-  ))}
+                {/* Applicant Card */}
+                <ApplicantsCardsSection applications={[application]} />
+              </div>
+            ))}
 
-  {/* Empty State */}
-  {appsToDisplay.length === 0 && (
-    <div className="col-span-3 rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-sm">
-      No applicants found.
-    </div>
-  )}
-</div>
+            {/* Empty State */}
+            {appsToDisplay.length === 0 && (
+              <div className="col-span-3 rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-sm">
+                No applicants found.
+              </div>
+            )}
+          </div>
         )}
       </section>
     </Container>

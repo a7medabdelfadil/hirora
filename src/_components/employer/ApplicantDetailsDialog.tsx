@@ -4,10 +4,10 @@ import * as React from "react";
 import {
   Mail,
   Phone,
-  Download,
   CircleX,
   Clock,
   CheckCircle2,
+  Eye,
 } from "lucide-react";
 
 import {
@@ -154,10 +154,10 @@ export default function ApplicantDetailsDialog({
             <button
               type="button"
               onClick={() => onDownloadResume?.(applicant.id)}
-              className="mt-3 inline-flex w-full items-center gap-2 rounded-xl bg-gray-100 px-4 py-3 text-sm font-medium text-gray-900 transition hover:bg-gray-200"
+              className="mt-3 w-fit inline-flex items-center gap-2 rounded-xl bg-gray-100 px-4 py-3 text-sm font-medium text-gray-900 transition hover:bg-gray-200"
             >
-              <Download className="h-4 w-4" />
-              Download Resume ({applicant.resumeFileName})
+              <Eye className="h-4 w-4" />
+              View Resume
             </button>
           </div>
         </div>

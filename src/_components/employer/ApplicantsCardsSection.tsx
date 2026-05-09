@@ -200,22 +200,6 @@ export default function ApplicantsCardsSection({
                 </div>
               </div>
 
-              <div className="mt-6">
-                <div className="text-sm text-gray-700">Skills</div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {visibleSkills.length ? (
-                    <>
-                      {visibleSkills.map((skill) => (
-                        <Chip key={skill}>{skill}</Chip>
-                      ))}
-                      {extraSkillsCount ? <Chip>+{extraSkillsCount}</Chip> : null}
-                    </>
-                  ) : (
-                    <span className="text-sm text-gray-500">No skills listed</span>
-                  )}
-                </div>
-              </div>
-
               <div className="my-6 h-px w-full bg-gray-200/70" />
 
               <div className="flex items-center gap-3">
