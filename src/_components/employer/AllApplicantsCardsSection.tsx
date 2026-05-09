@@ -10,6 +10,10 @@ import type {
 } from "~/APIs/features/employer";
 import { useUpdateEmployerApplicationStatus } from "~/APIs/hooks/useEmployer";
 
+// --------------------------- //
+const BASE_URL = "https://hire-hub-backend-24125c11c709.herokuapp.com";
+// --------------------------- //
+
 type Status =
   | "pending"
   | "reviewing"
@@ -106,10 +110,16 @@ export default function AllApplicantsCardsSection({
     });
   };
 
+  // ------ التعديل هنا: تحميل ملف الـ CV مع معالجة BASE_URL ------
   const onDownload = (resumeUrl?: string) => {
     if (!resumeUrl) return;
-    window.open(resumeUrl, "_blank", "noopener,noreferrer");
+    const url =
+      resumeUrl.startsWith("/")
+        ? `${BASE_URL}${resumeUrl}`
+        : resumeUrl;
+    window.open(url, "_blank", "noopener,noreferrer");
   };
+  // ------------------------------------------------------------
 
   if (!applications.length) {
     return (
@@ -206,22 +216,6 @@ export default function AllApplicantsCardsSection({
                 </div>
               </div>
 
-              <div className="mt-6">
-                <div className="text-sm text-gray-700">Skills</div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {visibleSkills.length ? (
-                    <>
-                      {visibleSkills.map((skill) => (
-                        <Chip key={skill}>{skill}</Chip>
-                      ))}
-                      {extraSkillsCount ? <Chip>+{extraSkillsCount}</Chip> : null}
-                    </>
-                  ) : (
-                    <span className="text-sm text-gray-500">No skills listed</span>
-                  )}
-                </div>
-              </div>
-
               <div className="my-6 h-px w-full bg-gray-200/70" />
 
               <div className="flex items-center gap-3">
@@ -244,16 +238,6 @@ export default function AllApplicantsCardsSection({
                     </button>
                   }
                 />
-
-                <button
-                  type="button"
-                  onClick={() => onDownload(application.applicantDetails?.resume)}
-                  className="inline-flex h-11 w-12 items-center justify-center rounded-xl border border-gray-300 bg-white text-gray-900 transition hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  aria-label="Download"
-                  title="Download"
-                >
-                  <Download className="h-4 w-4" />
-                </button>
               </div>
             </div>
           );

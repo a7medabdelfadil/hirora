@@ -143,7 +143,6 @@ function JobPostingPage() {
                                 {/* Actions */}
                                 <div className="flex items-center gap-3">
                                     <Skeleton className="h-11 flex-1 rounded-xl" />
-                                    <Skeleton className="h-11 w-12 rounded-xl" />
                                 </div>
                             </div>
                         ))}
