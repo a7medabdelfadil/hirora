@@ -131,17 +131,6 @@ export default function ApplicantDetailsDialog({
           </div>
 
           <div>
-            <div className="text-sm font-semibold text-gray-900">Skills</div>
-            <div className="mt-3 flex flex-wrap gap-3">
-              {applicant.skills.length ? (
-                applicant.skills.map((s) => <Chip key={s}>{s}</Chip>)
-              ) : (
-                <span className="text-sm text-gray-500">No skills provided.</span>
-              )}
-            </div>
-          </div>
-
-          <div>
             <div className="text-sm font-semibold text-gray-900">Cover Letter</div>
             <div className="mt-3 text-sm leading-6 text-gray-700">
               {applicant.coverLetter}
