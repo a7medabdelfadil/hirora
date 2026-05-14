@@ -21,7 +21,6 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 import { toast } from "react-toastify";
-import { link } from "fs";
 import { useRouter } from "next/navigation";
 import Spinner from "~/_components/global/Spinner";
 
@@ -51,7 +50,52 @@ const emptyFormData: JobFormData = {
 
 function EmployerPage() {
   const [openCreateDialog, setOpenCreateDialog] = React.useState(false);
-  const [formData, setFormData] = React.useState<JobFormData>(emptyFormData);
+
+  const [formData, setFormData] =
+    React.useState<JobFormData>(emptyFormData);
+
+  const [salaryMinError, setSalaryMinError] = React.useState("");
+  const [salaryMaxError, setSalaryMaxError] = React.useState("");
+
+  const validateSalary = (
+    value: string,
+    field: "min" | "max",
+    minSalary?: string,
+  ) => {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return `Salary ${field} is required`;
+    }
+
+    // numbers only
+    if (!/^\d+$/.test(trimmedValue)) {
+      return "Please enter numbers only";
+    }
+
+    const salary = Number(trimmedValue);
+
+    // minimum salary
+    if (salary < 1000) {
+      return "Salary must be at least 1000";
+    }
+
+    // very large salary
+    if (salary > 10000000) {
+      return "Salary value is too large";
+    }
+
+    // salary max > salary min
+    if (
+      field === "max" &&
+      minSalary &&
+      Number(minSalary) >= salary
+    ) {
+      return "Salary max must be greater than salary min";
+    }
+
+    return "";
+  };
 
   const {
     data: dashboard,
@@ -68,8 +112,13 @@ function EmployerPage() {
 
         setOpenCreateDialog(false);
         setFormData(emptyFormData);
+
+        setSalaryMinError("");
+        setSalaryMaxError("");
+
         await refetch();
       },
+
       onError: (err: any) => {
         toast.error(err?.message || "Failed to create job ❌");
       },
@@ -78,7 +127,8 @@ function EmployerPage() {
   const pendingReviewsCount = React.useMemo(() => {
     return (
       dashboard?.recentApplications?.filter(
-        (application) => application.status?.toLowerCase() === "pending",
+        (application) =>
+          application.status?.toLowerCase() === "pending",
       ).length ?? 0
     );
   }, [dashboard]);
@@ -86,7 +136,8 @@ function EmployerPage() {
   const shortlistedCount = React.useMemo(() => {
     return (
       dashboard?.recentApplications?.filter(
-        (application) => application.status?.toLowerCase() === "shortlisted",
+        (application) =>
+          application.status?.toLowerCase() === "shortlisted",
       ).length ?? 0
     );
   }, [dashboard]);
@@ -133,6 +184,16 @@ function EmployerPage() {
       ...prev,
       [name]: value,
     }));
+
+    if (name === "salaryMin") {
+      setSalaryMinError(validateSalary(value, "min"));
+    }
+
+    if (name === "salaryMax") {
+      setSalaryMaxError(
+        validateSalary(value, "max", formData.salaryMin),
+      );
+    }
   };
 
   const parseListInput = (value: string) => {
@@ -142,8 +203,28 @@ function EmployerPage() {
       .filter(Boolean);
   };
 
-  const handleCreateJob = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateJob = (
+    e: React.FormEvent<HTMLFormElement>,
+  ) => {
     e.preventDefault();
+
+    const salaryMinValidation = validateSalary(
+      formData.salaryMin,
+      "min",
+    );
+
+    const salaryMaxValidation = validateSalary(
+      formData.salaryMax,
+      "max",
+      formData.salaryMin,
+    );
+
+    if (salaryMinValidation || salaryMaxValidation) {
+      setSalaryMinError(salaryMinValidation);
+      setSalaryMaxError(salaryMaxValidation);
+
+      return;
+    }
 
     if (
       !formData.title.trim() ||
@@ -161,7 +242,9 @@ function EmployerPage() {
       title: formData.title.trim(),
       description: formData.description.trim(),
       requirements: parseListInput(formData.requirements),
-      responsibilities: parseListInput(formData.responsibilities),
+      responsibilities: parseListInput(
+        formData.responsibilities,
+      ),
       category: formData.category.trim(),
       type: formData.type.trim(),
       location: formData.location.trim(),
@@ -171,21 +254,28 @@ function EmployerPage() {
   };
 
   const router = useRouter();
+
   useEffect(() => {
-    if (!isLoading && (!dashboard?.company?.name || isError)) {
+    if (
+      !isLoading &&
+      (!dashboard?.company?.name || isError)
+    ) {
       router.replace("/employer/no-company");
     }
   }, [isLoading, isError, dashboard, router]);
-if (isLoading) {
+
+  if (isLoading) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
-        <Spinner /> 
+        <Spinner />
       </div>
     );
   }
+
   if (isLoading || isError || !dashboard?.company?.name) {
     return null;
   }
+
   type ActionItem = {
     label: string;
     variant: "primary" | "outline";
@@ -212,184 +302,112 @@ if (isLoading) {
 
   return (
     <Container>
-      {isLoading ? (
-        <div className="space-y-6">
-          <section className="w-full">
-            <div className="mb-4 space-y-2">
-              <Skeleton className="h-5 w-[220px]" />
-              <Skeleton className="h-4 w-[100px]" />
-            </div>
+      <section className="w-full">
+        <div className="mb-4">
+          <h2 className="text-md text-gray-700">
+            Welcome back,{" "}
+            <span className="font-semibold">
+              {dashboard?.company?.name || "Employer"}
+            </span>
+          </h2>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+          <p className="text-sm text-gray-500">
+            {dashboard?.company?.industry || "Recruiter"}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((s) => (
+            <div
+              key={s.label}
+              className="relative rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+            >
+              <div
+                className={`absolute right-5 top-5 text-sm font-bold md:text-md ${s.valueColor}`}
+              >
+                +{s.value}
+              </div>
+
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-xl ${s.iconBg}`}
+              >
+                {s.icon}
+              </div>
+
+              <div className="mt-4 text-sm text-gray-600">
+                {s.label}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mt-6 flex items-stretch gap-4 max-md:flex-col">
+        <div className="h-full flex-1">
+          <JobPerformanceChart
+            data={dashboard?.jobPerformance ?? []}
+          />
+        </div>
+
+        <div className="h-full w-full md:max-w-[300px]">
+          <div className="w-full rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:max-w-[300px]">
+            <h3 className="text-sm font-medium text-gray-800">
+              Quick Actions
+            </h3>
+
+            <div className="mt-6 space-y-5">
+              {actions.map((a) => (
+                <button
+                  key={a.label}
+                  type="button"
+                  onClick={a.onClick}
+                  className={
+                    a.variant === "primary"
+                      ? "w-full rounded-xl bg-blue-600 px-4 py-4 text-base font-medium text-white shadow-sm transition hover:bg-blue-700 "
+                      : "w-full rounded-xl border border-gray-200 bg-white px-4 py-4 text-base font-medium text-gray-800 transition hover:bg-gray-50"
+                  }
                 >
-                  <div className="flex items-start justify-between">
-                    <Skeleton className="h-12 w-12 rounded-xl" />
-                    <Skeleton className="h-5 w-12" />
-                  </div>
-                  <Skeleton className="mt-4 h-4 w-[120px]" />
-                </div>
+                  {a.label}
+                </button>
               ))}
             </div>
-          </section>
-
-          <section className="mt-6 flex items-stretch gap-4 max-md:flex-col">
-            <div className="flex-1">
-              <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-                <Skeleton className="h-4 w-[140px]" />
-                <Skeleton className="mt-6 h-56 w-full rounded-xl" />
-              </div>
-            </div>
-
-            <div className="w-full md:max-w-[300px]">
-              <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                <Skeleton className="h-4 w-[110px]" />
-                <div className="mt-5 space-y-3">
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <Skeleton key={index} className="h-11 w-full rounded-xl" />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="mt-4 bg-gray-50">
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <Skeleton className="h-4 w-[130px]" />
-                <Skeleton className="h-4 w-[60px]" />
-              </div>
-
-              <div className="overflow-hidden rounded-xl border border-gray-100">
-                <div className="space-y-4 p-4">
-                  {Array.from({ length: 4 }).map((_, index) => (
-                    <div key={index} className="grid grid-cols-6 gap-4">
-                      <Skeleton className="col-span-2 h-12 rounded-xl" />
-                      <Skeleton className="h-12 rounded-xl" />
-                      <Skeleton className="h-12 rounded-xl" />
-                      <Skeleton className="h-12 rounded-xl" />
-                      <Skeleton className="h-12 rounded-xl" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-      ) : isError ? (
-        <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-8 shadow-sm flex flex-col items-center justify-center">
-          <div className="mb-3 flex items-center justify-center">
-            <svg className="h-8 w-8 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <circle cx="12" cy="12" r="10" strokeWidth="2" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01" />
-            </svg>
           </div>
-          <h2 className="text-lg font-bold text-yellow-900 mb-2">Company Assignment Required</h2>
-          <p className="text-md text-yellow-800 mb-1">
-            You have not been assigned to a company yet.
-          </p>
-          <p className="text-md text-yellow-800">
-            Please contact your administrator to add you to a company before using your dashboard.
-          </p>
         </div>
-      ) : (
-        <>
-          <section className="w-full">
-            <div className="mb-4">
-              <h2 className="text-md text-gray-700">
-                Welcome back,{" "}
-                <span className="font-semibold">
-                  {dashboard?.company?.name || "Employer"}
-                </span>
-              </h2>
-              <p className="text-sm text-gray-500">
-                {dashboard?.company?.industry || "Recruiter"}
-              </p>
-            </div>
+      </section>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {stats.map((s) => (
-                <div
-                  key={s.label}
-                  className="relative rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-                >
-                  <div
-                    className={`absolute right-5 top-5 text-sm font-bold md:text-md ${s.valueColor}`}
-                  >
-                    +{s.value}
-                  </div>
+      <section className="mt-4 bg-gray-50">
+        <div className="mx-auto">
+          <RecentApplicantsTable
+            applications={
+              dashboard?.recentApplications ?? []
+            }
+          />
+        </div>
+      </section>
 
-                  <div
-                    className={`flex h-12 w-12 items-center justify-center rounded-xl ${s.iconBg}`}
-                  >
-                    {s.icon}
-                  </div>
-
-                  <div className="mt-4 text-sm text-gray-600">{s.label}</div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="mt-6 flex items-stretch gap-4 max-md:flex-col">
-            <div className="h-full flex-1">
-              <JobPerformanceChart data={dashboard?.jobPerformance ?? []} />
-            </div>
-
-            <div className="h-full w-full md:max-w-[300px]">
-              <div className="w-full rounded-2xl border border-gray-200 bg-white p-6 shadow-sm md:max-w-[300px]">
-                <h3 className="text-sm font-medium text-gray-800">
-                  Quick Actions
-                </h3>
-
-                <div className="mt-6 space-y-5">
-                  {actions.map((a) => (
-                    <button
-                      key={a.label}
-                      type="button"
-                      onClick={a.onClick}
-                      className={
-                        a.variant === "primary"
-                          ? "w-full rounded-xl bg-blue-600 px-4 py-4 text-base font-medium text-white shadow-sm transition hover:bg-blue-700 "
-                          : "w-full rounded-xl border border-gray-200 bg-white px-4 py-4 text-base font-medium text-gray-800 transition hover:bg-gray-50"
-                      }
-                    >
-                      {a.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="mt-4 bg-gray-50">
-            <div className="mx-auto">
-              <RecentApplicantsTable
-                applications={dashboard?.recentApplications ?? []}
-              />
-            </div>
-          </section>
-        </>
-      )}
-
-      <Dialog open={openCreateDialog} onOpenChange={setOpenCreateDialog}>
+      <Dialog
+        open={openCreateDialog}
+        onOpenChange={setOpenCreateDialog}
+      >
         <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>Create New Job</DialogTitle>
+
             <DialogDescription>
               Fill in the job details to publish a new opening.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleCreateJob} className="space-y-4">
+          <form
+            onSubmit={handleCreateJob}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Job Title
                 </label>
+
                 <input
                   name="title"
                   value={formData.title}
@@ -403,6 +421,7 @@ if (isLoading) {
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Description
                 </label>
+
                 <textarea
                   name="description"
                   value={formData.description}
@@ -417,6 +436,7 @@ if (isLoading) {
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Category
                 </label>
+
                 <input
                   name="category"
                   value={formData.category}
@@ -430,6 +450,7 @@ if (isLoading) {
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Type
                 </label>
+
                 <select
                   name="type"
                   value={formData.type}
@@ -437,10 +458,18 @@ if (isLoading) {
                   className="h-11 w-full rounded-xl border border-gray-200 bg-white px-4 pr-10 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
                 >
                   <option value="">Select type</option>
-                  <option value="Full-time">Full-time</option>
-                  <option value="Part-time">Part-time</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Internship">Internship</option>
+                  <option value="Full-time">
+                    Full-time
+                  </option>
+                  <option value="Part-time">
+                    Part-time
+                  </option>
+                  <option value="Contract">
+                    Contract
+                  </option>
+                  <option value="Internship">
+                    Internship
+                  </option>
                 </select>
               </div>
 
@@ -448,6 +477,7 @@ if (isLoading) {
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Location
                 </label>
+
                 <input
                   name="location"
                   value={formData.location}
@@ -461,34 +491,57 @@ if (isLoading) {
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Salary Min
                 </label>
+
                 <input
                   name="salaryMin"
-                  type="number"
+                  type="text"
                   value={formData.salaryMin}
                   onChange={handleInputChange}
                   placeholder="120000"
-                  className="h-11 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                  className={`h-11 w-full rounded-xl border bg-white px-4 text-sm text-gray-900 outline-none transition focus:ring-2 ${
+                    salaryMinError
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                      : "border-gray-200 focus:border-green-500 focus:ring-green-500/20"
+                  }`}
                 />
+
+                {salaryMinError && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {salaryMinError}
+                  </p>
+                )}
               </div>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Salary Max
                 </label>
+
                 <input
                   name="salaryMax"
-                  type="number"
+                  type="text"
                   value={formData.salaryMax}
                   onChange={handleInputChange}
                   placeholder="160000"
-                  className="h-11 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-500/20"
+                  className={`h-11 w-full rounded-xl border bg-white px-4 text-sm text-gray-900 outline-none transition focus:ring-2 ${
+                    salaryMaxError
+                      ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                      : "border-gray-200 focus:border-green-500 focus:ring-green-500/20"
+                  }`}
                 />
+
+                {salaryMaxError && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {salaryMaxError}
+                  </p>
+                )}
               </div>
 
               <div className="md:col-span-2">
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Requirements
                 </label>
+
                 <textarea
                   name="requirements"
                   value={formData.requirements}
@@ -505,6 +558,7 @@ React, Node.js, TypeScript`}
                 <label className="mb-2 block text-sm font-medium text-gray-700">
                   Responsibilities
                 </label>
+
                 <textarea
                   name="responsibilities"
                   value={formData.responsibilities}
@@ -523,7 +577,11 @@ Collaborate with the team`}
                 type="button"
                 onClick={() => {
                   setOpenCreateDialog(false);
+
                   setFormData(emptyFormData);
+
+                  setSalaryMinError("");
+                  setSalaryMaxError("");
                 }}
                 className="inline-flex h-11 items-center justify-center rounded-xl border border-gray-200 bg-white px-5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
               >
@@ -534,6 +592,8 @@ Collaborate with the team`}
                 type="submit"
                 disabled={
                   isCreatingJob ||
+                  !!salaryMinError ||
+                  !!salaryMaxError ||
                   !formData.title.trim() ||
                   !formData.description.trim() ||
                   !formData.category.trim() ||
@@ -544,7 +604,9 @@ Collaborate with the team`}
                 }
                 className="inline-flex h-11 items-center justify-center rounded-xl bg-green-600 px-5 text-sm font-medium text-white shadow-sm transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isCreatingJob ? "Creating..." : "Create Job"}
+                {isCreatingJob
+                  ? "Creating..."
+                  : "Create Job"}
               </button>
             </DialogFooter>
           </form>

@@ -38,7 +38,47 @@ function CompaniesPage() {
     owner: "",
   });
 
+  const [sizeError, setSizeError] = React.useState("");
+
   const isEditMode = !!editingCompany;
+
+  const validateSize = (value: string) => {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return "Size is required";
+    }
+
+    // يقبل رقم أو range زي 50-100
+    const regex = /^(\d+)(-\d+)?$/;
+
+    if (!regex.test(trimmedValue)) {
+      return "Please enter valid numbers only";
+    }
+
+    // لو range
+    if (trimmedValue.includes("-")) {
+      const [min = 0, max = 0] = trimmedValue
+        .split("-")
+        .map((num) => Number(num));
+
+      if (min >= max) {
+        return "Minimum size must be less than maximum size";
+      }
+
+      if (max > 100000) {
+        return "Size number is too large";
+      }
+    } else {
+      const number = Number(trimmedValue);
+
+      if (number > 100000) {
+        return "Size number is too large";
+      }
+    }
+
+    return "";
+  };
 
   const resetForm = React.useCallback(() => {
     setFormData({
@@ -48,6 +88,8 @@ function CompaniesPage() {
       size: "",
       owner: "",
     });
+
+    setSizeError("");
     setEditingCompany(null);
   }, []);
 
@@ -97,7 +139,7 @@ function CompaniesPage() {
 
   const { mutate: deleteCompany, isPending: isDeletingCompany } =
     useDeleteCompany({
-      onSuccess: async (data) => {
+      onSuccess: async () => {
         toast.success("Company deleted successfully.");
         await refetch();
       },
@@ -135,6 +177,10 @@ function CompaniesPage() {
       ...prev,
       [name]: value,
     }));
+
+    if (name === "size") {
+      setSizeError(validateSize(value));
+    }
   };
 
   const handleOpenCreate = () => {
@@ -144,6 +190,7 @@ function CompaniesPage() {
 
   const handleEditCompany = (company: AdminCompanyItem) => {
     setEditingCompany(company);
+
     setFormData({
       name: company.name ?? "",
       industry: company.industry ?? "",
@@ -151,6 +198,8 @@ function CompaniesPage() {
       size: company.size ?? "",
       owner: company.owner?._id ?? "",
     });
+
+    setSizeError("");
     setOpenCreateDialog(true);
   };
 
@@ -170,6 +219,13 @@ function CompaniesPage() {
 
   const handleSubmitCompany = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const sizeValidationError = validateSize(formData.size);
+
+    if (sizeValidationError) {
+      setSizeError(sizeValidationError);
+      return;
+    }
 
     if (
       !formData.name.trim() ||
@@ -194,6 +250,7 @@ function CompaniesPage() {
         companyId: editingCompany._id,
         ...payload,
       });
+
       return;
     }
 
@@ -214,6 +271,7 @@ function CompaniesPage() {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="relative w-full md:flex-1">
               <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -257,77 +315,9 @@ function CompaniesPage() {
                       <th className="px-6 py-4 text-left">
                         <Skeleton className="h-4 w-[90px]" />
                       </th>
-                      <th className="px-6 py-4 text-left">
-                        <Skeleton className="h-4 w-[70px]" />
-                      </th>
-                      <th className="px-6 py-4 text-left">
-                        <Skeleton className="h-4 w-[70px]" />
-                      </th>
-                      <th className="px-6 py-4 text-left">
-                        <Skeleton className="h-4 w-[40px]" />
-                      </th>
-                      <th className="px-6 py-4 text-left">
-                        <Skeleton className="h-4 w-[90px]" />
-                      </th>
-                      <th className="px-6 py-4 text-left">
-                        <Skeleton className="h-4 w-[55px]" />
-                      </th>
-                      <th className="px-6 py-4 text-left">
-                        <Skeleton className="h-4 w-[60px]" />
-                      </th>
                     </tr>
                   </thead>
-
-                  <tbody>
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <tr
-                        key={index}
-                        className="border-b border-gray-200 last:border-b-0"
-                      >
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-4">
-                            <Skeleton className="h-10 w-10 rounded-lg" />
-                            <div className="min-w-0 space-y-2">
-                              <Skeleton className="h-4 w-[160px]" />
-                              <Skeleton className="h-3 w-[110px]" />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5">
-                          <Skeleton className="h-4 w-[90px]" />
-                        </td>
-                        <td className="px-6 py-5">
-                          <Skeleton className="h-4 w-[110px]" />
-                        </td>
-                        <td className="px-6 py-5">
-                          <Skeleton className="h-4 w-[70px]" />
-                        </td>
-                        <td className="px-6 py-5">
-                          <Skeleton className="h-8 w-[44px] rounded-full" />
-                        </td>
-                        <td className="px-6 py-5">
-                          <Skeleton className="h-6 w-[50px] rounded-full" />
-                        </td>
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-3">
-                            <Skeleton className="h-4 w-4 rounded-sm" />
-                            <Skeleton className="h-4 w-4 rounded-sm" />
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
                 </table>
-              </div>
-            </div>
-
-            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <Skeleton className="h-4 w-[180px]" />
-              <div className="flex items-center gap-2 self-end">
-                <Skeleton className="h-9 w-20 rounded-md" />
-                <Skeleton className="h-9 w-9 rounded-md" />
-                <Skeleton className="h-9 w-9 rounded-md" />
-                <Skeleton className="h-9 w-20 rounded-md" />
               </div>
             </div>
           </div>
@@ -336,6 +326,7 @@ function CompaniesPage() {
             <p className="text-sm font-medium text-red-700">
               Failed to load companies.
             </p>
+
             <p className="mt-1 text-sm text-red-600">
               {error instanceof Error ? error.message : "Something went wrong."}
             </p>
@@ -365,6 +356,7 @@ function CompaniesPage() {
             <DialogTitle>
               {isEditMode ? "Edit Company" : "Create Company"}
             </DialogTitle>
+
             <DialogDescription>
               {isEditMode
                 ? "Update company information."
@@ -377,6 +369,7 @@ function CompaniesPage() {
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Company Name
               </label>
+
               <input
                 name="name"
                 value={formData.name}
@@ -390,6 +383,7 @@ function CompaniesPage() {
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Industry
               </label>
+
               <input
                 name="industry"
                 value={formData.industry}
@@ -403,6 +397,7 @@ function CompaniesPage() {
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Location
               </label>
+
               <input
                 name="location"
                 value={formData.location}
@@ -416,19 +411,29 @@ function CompaniesPage() {
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Size
               </label>
+
               <input
                 name="size"
                 value={formData.size}
                 onChange={handleInputChange}
                 placeholder="Example: 50-100"
-                className="h-11 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className={`h-11 w-full rounded-xl border bg-white px-4 text-sm text-gray-900 outline-none transition focus:ring-2 ${
+                  sizeError
+                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                    : "border-gray-200 focus:border-blue-500 focus:ring-blue-500/20"
+                }`}
               />
+
+              {sizeError && (
+                <p className="mt-1 text-sm text-red-500">{sizeError}</p>
+              )}
             </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Owner
               </label>
+
               <select
                 name="owner"
                 value={formData.owner}
@@ -466,6 +471,7 @@ function CompaniesPage() {
                 disabled={
                   isSubmitting ||
                   employersLoading ||
+                  !!sizeError ||
                   !formData.name.trim() ||
                   !formData.industry.trim() ||
                   !formData.location.trim() ||
